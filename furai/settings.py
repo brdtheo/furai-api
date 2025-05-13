@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
-load_dotenv('.env.local')
+load_dotenv(".env.local")
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -32,7 +32,7 @@ SECRET_KEY = "django-insecure-zdhtne&9ku3hh))fi%ibxkpy+c=wwi1%nft4b5=g%&9!g@q@e@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: list[str] = []
 
 
 # Application definition

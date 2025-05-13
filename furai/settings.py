@@ -61,7 +61,7 @@ ROOT_URLCONF = "furai.urls"
 TEMPLATES: list[dict[str, str | list[str] | bool | dict[str, list[str]]]] = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "furai/templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

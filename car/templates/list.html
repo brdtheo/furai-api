@@ -4,4 +4,9 @@
 {% endblock title %}
 {% block main %}
   <h1>cars page</h1>
+  <ul>
+    <li>
+      <a href="{% url 'car-details' car_slug='honda-civic-1-6-vti' %}">Honda Civic 1.6 Vti</a>
+    </li>
+  </ul>
 {% endblock main %}

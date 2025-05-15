@@ -3,14 +3,15 @@
   <head>
     <title>
       {% block title %}
-        Home
       {% endblock title %}
     </title>
-    <meta name="description" content="home">
+    <meta name="description" content="{{ meta_description }}">
   </head>
   <body>
+    {% include "navigation.html" %}
     <main>
-      Home
+      {% block main %}
+      {% endblock main %}
     </main>
   </body>
 </html>

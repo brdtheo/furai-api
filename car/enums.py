@@ -1,0 +1,47 @@
+from django.db import models
+
+
+class CarMake(models.TextChoices):
+    HONDA = "HONDA"
+    MAZDA = "MAZDA"
+    MITSUBISHI = "MITSUBISHI"
+    SUBARU = "SUBARU"
+
+
+class CarTransmission(models.TextChoices):
+    AUTOMATIC = "AT"
+    MANUAL = "MT"
+
+
+class CarDrivetrain(models.TextChoices):
+    ALL_WHEEL_DRIVE = "AWD"
+    FOUR_WHEEL_DRIVE = "4WD"
+    FRONT_WHEEL_DRIVE = "FWD"
+    REAR_WHEEL_DRIVE = "RWD"
+
+
+class CarFuelType(models.TextChoices):
+    BENSIN = "B"
+    GASOHOL_91 = "G91"
+    GASOHOL_95 = "G95"
+    GASOHOL_E20 = "GE20"
+    GASOHOL_E85 = "GE85"
+    PREMIUM_BENSIN = "PB"
+
+
+class CarFeatures(models.TextChoices):
+    AIRBAG = "AIRBAG"
+    AIR_CONDITIONING = "AIR_CONDITIONING"
+    ANTI_LOCK_BREAKING_SYSTEM = "ABS"
+    ASSISTED_STEERING = "ASSISTED_STEERING"
+    BLUETOOTH = "BLUETOOTH"
+    DASH_CAM = "DASH_CAM"
+    DRIVE_MODES = "DRIVE_MODES"
+    ELECTRONIC_STABILITY_CONTROL = "ESC"
+    GPS_NAVIGATION = "GPS_NAVIGATION"
+    KEYLESS_ENTRY = "KEYLESS_ENTRY"
+    LED_HEADLIGHTS = "LED_HEADLIGHTS"
+    POP_UP_HEADLIGHTS = "POP_UP_HEADLIGHTS"
+    POWERED_WINDOWS = "POWERED_WINDOWS"
+    REAR_CAMERA = "REAR_CAMERA"
+    USB_PORTS = "USB_PORTS"

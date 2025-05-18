@@ -1,0 +1,24 @@
+name: Static analysis
+
+on: [push]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    name: Run tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Set DATABASE_URL from secret
+        run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+
+      - name: Execute tests
+        run: pytest

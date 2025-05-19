@@ -4,7 +4,7 @@
 {% endblock title %}
 {% block main %}
   {% include "hero.html" %}
-  {% include "fleet.html" %}
+  {% include "fleet.html" with car_list=car_list %}
   {% include "questions-answers.html" %}
   {% include "contact.html" %}
 {% endblock main %}

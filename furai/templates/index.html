@@ -3,7 +3,7 @@
   Rent a JDM car in Bangkok, Thailand
 {% endblock title %}
 {% block main %}
-  {% include "hero.html" %}
+  {% include "hero.html" with title="Rent a JDM car easily in Bangkok" hero_buttons=hero_buttons hero_thumbnail=hero_thumbnail %}
   {% include "fleet.html" with car_list=car_list %}
   {% include "questions-answers.html" %}
   {% include "contact.html" %}

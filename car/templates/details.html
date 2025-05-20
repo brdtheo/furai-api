@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block title %}
-  {{ car_name }} - Rent a JDM car in Bangkok
+  {{ car.name }} - Rent a JDM car in Bangkok
 {% endblock title %}
 {% block main %}
-  <h1>car details page</h1>
+  {% include "hero.html" with title=car.name hero_buttons=hero_buttons hero_thumbnail=hero_thumbnail %}
+  {% include "specifications.html" with car=car %}
+  {% include "features.html" with car_feature_list=car_feature_list all_car_features=all_car_features %}
+  {% include "gallery.html" with car_media_list=car_media_list car_name=car.name %}
 {% endblock main %}

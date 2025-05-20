@@ -1,0 +1,14 @@
+<section class="max-w-[1200px] mx-auto mb-24">
+  <h2 class="font-bold text-4xl mb-8">Features</h2>
+  <div class="flex gap-20">
+    <table class="w-1/4">
+      <tbody>
+        {% for car_feature in all_car_features %}
+          <tr class="h-10 border-b last:border-none">
+            <td class="text-left">{{ car_feature }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>

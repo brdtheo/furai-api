@@ -2,6 +2,7 @@ from typing import Any, override
 
 from django.db import models
 from django.forms import ValidationError
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -138,6 +139,9 @@ class Car(models.Model):
         if self.pk:
             self.updated_at = timezone.now()
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self) -> str:
+        return reverse("car-details", kwargs={"car_slug": self.slug})
 
 
 class CarMedia(models.Model):

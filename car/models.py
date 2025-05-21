@@ -164,3 +164,14 @@ class CarMedia(models.Model):
 
     def __str__(self) -> str:
         return self.url
+
+    @override
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        # Ensure only one thumbnail is linked to a car
+        thumbnail_count = CarMedia.objects.filter(
+            car=self.car, is_thumbnail=True
+        ).count()
+        if self.is_thumbnail and thumbnail_count > 0:
+            raise ValidationError("Cannot assign multiple thumbnails for one car")
+
+        super().save(*args, **kwargs)

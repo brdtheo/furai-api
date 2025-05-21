@@ -21,7 +21,7 @@ from django.urls import URLPattern, URLResolver, include, path
 from .views import index as home
 
 urlpatterns: list[URLResolver | URLPattern] = [
-    path("admin/", admin.site.urls),
+    path("manage/", admin.site.urls),
     path("", home, name="home"),
     path("cars/", include("car.urls")),
 ]

@@ -1,7 +1,7 @@
 from django.urls import URLPattern, URLResolver, path
 
-from .views import car_details
+from .views import CarDetailView
 
 urlpatterns: list[URLResolver | URLPattern] = [
-    path("<str:car_slug>", car_details, name="car-details"),
+    path("<str:car_slug>", CarDetailView.as_view(), name="car-details"),
 ]

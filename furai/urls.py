@@ -18,10 +18,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import URLPattern, URLResolver, include, path
 
-from .views import index as home
+from .views import HomeView
 
 urlpatterns: list[URLResolver | URLPattern] = [
     path("manage/", admin.site.urls),
-    path("", home, name="home"),
+    path("", HomeView.as_view(), name="home"),
     path("cars/", include("car.urls")),
 ]

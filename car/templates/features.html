@@ -1,9 +1,9 @@
-<section class="max-w-[1200px] mx-auto mb-24">
+<section class="w-1/2">
   <h2 class="font-bold text-4xl mb-8">Features</h2>
   <div class="flex gap-20">
-    <table class="w-1/4">
+    <table class="w-full">
       <tbody>
-        {% for car_feature in all_car_features %}
+        {% for car_feature in car_feature_list %}
           <tr class="h-10 border-b last:border-none">
             <td class="text-left">{{ car_feature }}</td>
           </tr>

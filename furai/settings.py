@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
     "car",
     "user",
 ]
@@ -76,6 +77,12 @@ TEMPLATES: list[dict[str, str | list[str] | bool | dict[str, list[str]]]] = [
 ]
 
 WSGI_APPLICATION = "furai.wsgi.application"
+
+# Django REST Framework
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+}
 
 
 # Database

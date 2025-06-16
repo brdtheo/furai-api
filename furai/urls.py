@@ -17,11 +17,12 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import URLPattern, URLResolver, include, path
+from rest_framework import routers
 
-from .views import HomeView
+router = routers.DefaultRouter()
+
 
 urlpatterns: list[URLResolver | URLPattern] = [
     path("manage/", admin.site.urls),
-    path("", HomeView.as_view(), name="home"),
-    path("cars/", include("car.urls")),
+    path("api/", include("car.urls")),
 ]

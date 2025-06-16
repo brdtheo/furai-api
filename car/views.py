@@ -1,43 +1,56 @@
-from typing import Any
+from django.http import HttpRequest, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser
 
-from django.db.models import QuerySet
-from django.shortcuts import get_object_or_404
-from django.views.generic import DetailView
-
-from .enums import CarFeatures
-from .models import Car, CarFeature, CarMedia
+from .models import Car, CarMedia
+from .serializers import CarMediaSerializer, CarSerializer
 
 
-class CarDetailView(DetailView):
-    model = Car
-    template_name = "details.html"
-    slug_url_kwarg = "car_slug"
+@csrf_exempt
+def car_list(request: HttpRequest) -> JsonResponse:
+    """
+    List all cars or create a new car instance
+    """
 
-    def get_context_data(
-        self, **kwargs: Any
-    ) -> dict[
-        str,
-        Car
-        | QuerySet[CarMedia, CarMedia]
-        | QuerySet[CarFeature, CarFeature]
-        | CarFeatures
-        | list[dict[str, str]]
-        | CarMedia,
-    ]:
-        context = super().get_context_data(**kwargs)
-        car = get_object_or_404(Car, slug=self.kwargs.get("car_slug"))
-        car_media_list = CarMedia.objects.filter(car=car)
-        car_feature_list = CarFeature.objects.filter(car=car)
-        hero_buttons = [
-            {"label": "book this car", "href": "#"},
-            {"label": "ask a question", "href": "#"},
-        ]
-        hero_thumbnail = car_media_list.get(is_thumbnail=True)
+    if request.method == "GET":
+        car_list = Car.objects.all().order_by("price_24_hours_cents")
+        serializer = CarSerializer(car_list, many=True)
+        return JsonResponse(serializer.data, safe=False)
 
-        context["car"] = car
-        context["car_media_list"] = car_media_list
-        context["car_feature_list"] = car_feature_list
-        context["all_car_features"] = CarFeatures
-        context["hero_buttons"] = hero_buttons
-        context["hero_thumbnail"] = hero_thumbnail
-        return context
+    elif request.method == "POST":
+        payload = JSONParser.parse(request)  # type: ignore
+        serializer = CarSerializer(data=payload)
+
+        if not serializer.is_valid():
+            return JsonResponse(serializer.errors, status=400)
+
+        serializer.save()
+        return JsonResponse(serializer.data, status=201)
+
+    else:
+        return JsonResponse({"error": "Unknown request type"}, status=400)
+
+
+@csrf_exempt
+def car_media_list(request: HttpRequest) -> JsonResponse:
+    """
+    List all car medias or create a new car media instance
+    """
+
+    if request.method == "GET":
+        car_media_list = CarMedia.objects.all()
+        serializer = CarMediaSerializer(car_media_list, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+    elif request.method == "POST":
+        payload = JSONParser.parse(request)  # type: ignore
+        serializer = CarMediaSerializer(data=payload)
+
+        if not serializer.is_valid():
+            return JsonResponse(serializer.errors, status=400)
+
+        serializer.save()
+        return JsonResponse(serializer.data, status=201)
+
+    else:
+        return JsonResponse({"error": "Unknown request type"}, status=400)

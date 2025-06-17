@@ -1,4 +1,5 @@
 from django.http import HttpRequest, JsonResponse
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 
@@ -26,6 +27,21 @@ def car_list(request: HttpRequest) -> JsonResponse:
 
         serializer.save()
         return JsonResponse(serializer.data, status=201)
+
+    else:
+        return JsonResponse({"error": "Unknown request type"}, status=400)
+
+
+@csrf_exempt
+def car_details(request: HttpRequest, id: int) -> JsonResponse:
+    """
+    Retrieve a car instance
+    """
+
+    if request.method == "GET":
+        car = get_object_or_404(Car, pk=id)
+        serializer = CarSerializer(car)
+        return JsonResponse(serializer.data, safe=False)
 
     else:
         return JsonResponse({"error": "Unknown request type"}, status=400)

@@ -2,8 +2,8 @@ from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Car, CarMedia
-from .serializers import CarMediaSerializer, CarSerializer
+from .models import Car, CarFeature, CarMedia
+from .serializers import CarFeatureSerializer, CarMediaSerializer, CarSerializer
 
 
 @csrf_exempt
@@ -48,6 +48,28 @@ def car_media_list(request: HttpRequest) -> JsonResponse:
         if car_id:
             queryset = CarMedia.objects.filter(car_id=car_id)
         serializer = CarMediaSerializer(queryset, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+    else:
+        return JsonResponse({"error": "Unknown request type"}, status=400)
+
+
+@csrf_exempt
+def car_feature_list(request: HttpRequest) -> JsonResponse:
+    """
+    List car features
+    """
+
+    if request.method == "GET":
+        id__in = (
+            request.GET["id__in"].split(",")
+            if request.GET and request.GET["id__in"]
+            else None
+        )
+        queryset = CarFeature.objects.all()
+        if id__in:
+            queryset = CarFeature.objects.filter(id__in=id__in)
+        serializer = CarFeatureSerializer(queryset, many=True)
         return JsonResponse(serializer.data, safe=False)
 
     else:

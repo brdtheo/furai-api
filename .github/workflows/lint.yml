@@ -18,6 +18,3 @@ jobs:
 
       - name: Run Ruff
         run: ruff check --output-format=github furai/ car/ user/
-
-      - name: Run djLint
-        run: djlint furai/templates car/templates

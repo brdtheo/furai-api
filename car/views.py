@@ -1,12 +1,10 @@
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
 
 from .models import Car, CarFeature, CarMedia
 from .serializers import CarFeatureSerializer, CarMediaSerializer, CarSerializer
 
 
-@csrf_exempt
 def car_list(request: HttpRequest) -> JsonResponse:
     """
     List all cars
@@ -21,7 +19,6 @@ def car_list(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": "Unknown request type"}, status=400)
 
 
-@csrf_exempt
 def car_details(request: HttpRequest, id: int) -> JsonResponse:
     """
     Retrieve a car instance
@@ -36,7 +33,6 @@ def car_details(request: HttpRequest, id: int) -> JsonResponse:
         return JsonResponse({"error": "Unknown request type"}, status=400)
 
 
-@csrf_exempt
 def car_media_list(request: HttpRequest) -> JsonResponse:
     """
     List car medias
@@ -54,7 +50,6 @@ def car_media_list(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": "Unknown request type"}, status=400)
 
 
-@csrf_exempt
 def car_feature_list(request: HttpRequest) -> JsonResponse:
     """
     List car features

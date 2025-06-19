@@ -3,11 +3,11 @@ from django.forms import ValidationError
 from django.test import TestCase
 
 from .enums import CarDrivetrain, CarFeatures, CarFuelType, CarMake, CarTransmission
-from .models import Car, CarFeature
+from .models import Car, CarFeature, CarMedia
 
 
 def set_up_car() -> Car:
-    """Creates a Car object in the test DB"""
+    """Creates a Car instances in the test DB"""
     car = Car.objects.create(
         make=CarMake.SUBARU,
         model="WRX STI",
@@ -28,9 +28,17 @@ def set_up_car() -> Car:
 
 
 def set_up_car_features():
-    """Creates a list of CarFeature objects in the test DB"""
+    """Creates a list of CarFeature instances in the test DB"""
     for feature in CarFeatures:
         CarFeature.objects.create(name=feature)
+
+
+def set_up_car_media_list(car: Car):
+    """Creates a list of CarMedia instances in the test DB"""
+    for i in range(10):
+        CarMedia.objects.create(
+            car=car, url="https://picsum.photos/250/250", is_thumbnail=bool(i == 0)
+        )
 
 
 class CarTestCase(TestCase):
@@ -96,23 +104,54 @@ class CarMediaTestCase(TestCase):
     def setUp(self):
         car = set_up_car()
         set_up_car_features()
+        set_up_car_media_list(car)
         self.car = car
 
     def test_create_car_media(self):
-        """Correctly creates a car media"""
-        pass
+        """Correctly creates car medias"""
+        assert CarMedia.objects.count() == 10
 
-    def test_update_car_media(self):
-        """Correctly updates a car media"""
+    def test_update_car_media_url(self):
+        """Correctly updates a car media url"""
+        media = CarMedia.objects.last()
+        if media is not None:
+            media.url = "https://picsum.photos/250/250"
+            media.save()
+            assert media.url == "https://picsum.photos/250/250"
         pass
 
     def test_delete_car_media(self):
         """Correctly deletes a car media"""
+        media = CarMedia.objects.last()
+        if media is not None:
+            media.delete()
+            assert CarMedia.objects.count() == 9
         pass
 
     def test_cascade_delete_car_media(self):
         """All car medias should be deleted when a car is deleted"""
-        pass
+        self.car.delete()
+        assert CarMedia.objects.count() == 0
+
+    def test_create_multiple_car_thumbnails(self):
+        """A car should only have one thumbnail"""
+        with self.assertRaises(ValidationError):
+            CarMedia.objects.create(
+                car=self.car,
+                url="https://picsum.photos/250/250",
+                is_thumbnail=True,
+            )
+
+    def test_update_is_thumbnail(self):
+        """We should be able to update which instance is the thumbnail"""
+        thumbnail = CarMedia.objects.get(is_thumbnail=True)
+        new_thumbnail = CarMedia.objects.filter(is_thumbnail=False)[0]
+        thumbnail.is_thumbnail = False
+        new_thumbnail.is_thumbnail = True
+        thumbnail.save()
+        new_thumbnail.save()
+        assert thumbnail.is_thumbnail is False
+        assert new_thumbnail.is_thumbnail is True
 
 
 class CarFeatureTestCase(TestCase):

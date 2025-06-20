@@ -21,4 +21,4 @@ jobs:
         run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
 
       - name: Run mypy
-        run: mypy --disallow-untyped-defs furai car user
+        run: mypy --disallow-untyped-defs furai car user customer

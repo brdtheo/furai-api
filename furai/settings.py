@@ -84,6 +84,10 @@ TEMPLATES: list[dict[str, str | list[str] | bool | dict[str, list[str]]]] = [
 
 WSGI_APPLICATION = "furai.wsgi.application"
 
+# Append slash
+# https://docs.djangoproject.com/en/5.2/ref/settings/#append-slash
+APPEND_SLASH = False
+
 # Django REST Framework
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",

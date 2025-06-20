@@ -1,85 +1,60 @@
-from django.http import HttpRequest, JsonResponse
-from django.shortcuts import get_object_or_404
-from rest_framework import status
-from rest_framework.decorators import api_view
+from typing import Any
+
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from .models import Car, CarFeature, CarMedia
 from .serializers import CarFeatureSerializer, CarMediaSerializer, CarSerializer
 
 
-@api_view(["GET"])
-def car_list(request: HttpRequest) -> JsonResponse:
+class CarList(ListAPIView, RetrieveAPIView):
     """
-    List all cars
+    List cars
     """
 
-    if request.method == "GET":
-        car_list = Car.objects.all().order_by("price_24_hours_cents")
-        serializer = CarSerializer(car_list, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-    else:
-        return JsonResponse(
-            {"error": "Unknown request type"}, status=status.HTTP_400_BAD_REQUEST
-        )
+    queryset = Car.objects.order_by("price_24_hours_cents")
+    serializer_class = CarSerializer
 
 
-@api_view(["GET"])
-def car_details(request: HttpRequest, id: int) -> JsonResponse:
+class CarDetail(RetrieveAPIView):
     """
     Retrieve a car instance
     """
 
-    if request.method == "GET":
-        car = get_object_or_404(Car, pk=id)
-        serializer = CarSerializer(car)
-        return JsonResponse(serializer.data, safe=False)
-
-    else:
-        return JsonResponse(
-            {"error": "Unknown request type"}, status=status.HTTP_400_BAD_REQUEST
-        )
+    queryset = Car.objects.all()
+    serializer_class = CarSerializer
 
 
-@api_view(["GET"])
-def car_media_list(request: HttpRequest) -> JsonResponse:
+class CarMediaList(ListAPIView):
     """
     List car medias
     """
 
-    if request.method == "GET":
+    queryset = CarMedia.objects.all()
+    serializer_class = CarMediaSerializer
+
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         car_id = request.GET["car"] if request.GET else None
-        queryset = CarMedia.objects.all()
         if car_id:
-            queryset = CarMedia.objects.filter(car_id=car_id)
-        serializer = CarMediaSerializer(queryset, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-    else:
-        return JsonResponse(
-            {"error": "Unknown request type"}, status=status.HTTP_400_BAD_REQUEST
-        )
+            self.queryset = CarMedia.objects.filter(car_id=car_id)
+        return self.list(request, *args, **kwargs)
 
 
-@api_view(["GET"])
-def car_feature_list(request: HttpRequest) -> JsonResponse:
+class CarFeatureList(ListAPIView):
     """
     List car features
     """
 
-    if request.method == "GET":
+    queryset = CarFeature.objects.all()
+    serializer_class = CarFeatureSerializer
+
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         id__in = (
             request.GET["id__in"].split(",")
             if request.GET and request.GET["id__in"]
             else None
         )
-        queryset = CarFeature.objects.all()
         if id__in:
-            queryset = CarFeature.objects.filter(id__in=id__in)
-        serializer = CarFeatureSerializer(queryset, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-    else:
-        return JsonResponse(
-            {"error": "Unknown request type"}, status=status.HTTP_400_BAD_REQUEST
-        )
+            self.queryset = CarFeature.objects.filter(id__in=id__in)
+        return self.list(request, *args, **kwargs)

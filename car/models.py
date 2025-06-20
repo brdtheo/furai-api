@@ -147,7 +147,13 @@ class Car(models.Model):
 class CarMedia(models.Model):
     """Representation of a media (picture, video..) linked to a car"""
 
-    car = models.ForeignKey(Car, on_delete=models.CASCADE, null=True)
+    car = models.ForeignKey(
+        Car,
+        on_delete=models.CASCADE,
+        null=True,
+        help_text="The car linked to the media",
+        db_comment="The car linked to the media",
+    )
     url = models.URLField(
         help_text="The full path of the resource",
         db_comment="The full path of the resource",

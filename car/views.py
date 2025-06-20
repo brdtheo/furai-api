@@ -1,11 +1,13 @@
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.decorators import api_view
 
 from .models import Car, CarFeature, CarMedia
 from .serializers import CarFeatureSerializer, CarMediaSerializer, CarSerializer
 
 
+@api_view(["GET"])
 def car_list(request: HttpRequest) -> JsonResponse:
     """
     List all cars
@@ -22,6 +24,7 @@ def car_list(request: HttpRequest) -> JsonResponse:
         )
 
 
+@api_view(["GET"])
 def car_details(request: HttpRequest, id: int) -> JsonResponse:
     """
     Retrieve a car instance
@@ -38,6 +41,7 @@ def car_details(request: HttpRequest, id: int) -> JsonResponse:
         )
 
 
+@api_view(["GET"])
 def car_media_list(request: HttpRequest) -> JsonResponse:
     """
     List car medias
@@ -57,6 +61,7 @@ def car_media_list(request: HttpRequest) -> JsonResponse:
         )
 
 
+@api_view(["GET"])
 def car_feature_list(request: HttpRequest) -> JsonResponse:
     """
     List car features

@@ -24,5 +24,5 @@ router = routers.DefaultRouter()
 
 urlpatterns: list[URLResolver | URLPattern] = [
     path("manage/", admin.site.urls),
-    path("api/", include("car.urls")),
+    path("", include("car.urls")),
 ]

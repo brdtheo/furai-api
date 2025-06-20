@@ -1,5 +1,6 @@
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
+from rest_framework import status
 
 from .models import Car, CarFeature, CarMedia
 from .serializers import CarFeatureSerializer, CarMediaSerializer, CarSerializer
@@ -16,7 +17,9 @@ def car_list(request: HttpRequest) -> JsonResponse:
         return JsonResponse(serializer.data, safe=False)
 
     else:
-        return JsonResponse({"error": "Unknown request type"}, status=400)
+        return JsonResponse(
+            {"error": "Unknown request type"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 def car_details(request: HttpRequest, id: int) -> JsonResponse:
@@ -30,7 +33,9 @@ def car_details(request: HttpRequest, id: int) -> JsonResponse:
         return JsonResponse(serializer.data, safe=False)
 
     else:
-        return JsonResponse({"error": "Unknown request type"}, status=400)
+        return JsonResponse(
+            {"error": "Unknown request type"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 def car_media_list(request: HttpRequest) -> JsonResponse:
@@ -47,7 +52,9 @@ def car_media_list(request: HttpRequest) -> JsonResponse:
         return JsonResponse(serializer.data, safe=False)
 
     else:
-        return JsonResponse({"error": "Unknown request type"}, status=400)
+        return JsonResponse(
+            {"error": "Unknown request type"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 def car_feature_list(request: HttpRequest) -> JsonResponse:
@@ -68,4 +75,6 @@ def car_feature_list(request: HttpRequest) -> JsonResponse:
         return JsonResponse(serializer.data, safe=False)
 
     else:
-        return JsonResponse({"error": "Unknown request type"}, status=400)
+        return JsonResponse(
+            {"error": "Unknown request type"}, status=status.HTTP_400_BAD_REQUEST
+        )

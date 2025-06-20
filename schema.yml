@@ -1,0 +1,454 @@
+openapi: 3.0.3
+info:
+  title: Furai API
+  version: 1.0.0
+  description: Furai car rental's API
+paths:
+  /car-features:
+    get:
+      operationId: car_features_list
+      description: List car features
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - car-features
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCarFeatureList'
+          description: ''
+  /car-medias:
+    get:
+      operationId: car_medias_list
+      description: List car medias
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - car-medias
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCarMediaList'
+          description: ''
+  /cars:
+    get:
+      operationId: cars_list
+      description: List all cars
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - cars
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCarList'
+          description: ''
+  /cars/{id}:
+    get:
+      operationId: cars_retrieve
+      description: Retrieve a car instance
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - cars
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+          description: ''
+components:
+  schemas:
+    Car:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        make:
+          allOf:
+          - $ref: '#/components/schemas/MakeEnum'
+          description: |-
+            The car brand
+
+            * `HONDA` - Honda
+            * `MAZDA` - Mazda
+            * `MITSUBISHI` - Mitsubishi
+            * `SUBARU` - Subaru
+        model:
+          type: string
+          description: The car model
+          maxLength: 50
+        slug:
+          type: string
+          description: Slugified combination of make and model
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: The total passenger capacity
+        transmission:
+          allOf:
+          - $ref: '#/components/schemas/TransmissionEnum'
+          description: |-
+            The car transmission
+
+            * `AT` - Automatic
+            * `MT` - Manual
+        drivetrain:
+          allOf:
+          - $ref: '#/components/schemas/DrivetrainEnum'
+          description: |-
+            The car drivetrain
+
+            * `AWD` - All Wheel Drive
+            * `4WD` - Four Wheel Drive
+            * `FWD` - Front Wheel Drive
+            * `RWD` - Rear Wheel Drive
+        fuel_type:
+          allOf:
+          - $ref: '#/components/schemas/FuelTypeEnum'
+          description: |-
+            The car fuel type
+
+            * `B` - Bensin
+            * `G91` - Gasohol 91
+            * `G95` - Gasohol 95
+            * `GE20` - Gasohol E20
+            * `GE85` - Gasohol E85
+            * `PB` - Premium Bensin
+        fuel_consumption_metric:
+          type: number
+          format: double
+          description: The fuel efficiency, represented in liters per 100km (L/100km)
+        engine_code:
+          type: string
+          description: The car engine identifier
+          maxLength: 12
+        power_hp:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: The engine power in HP
+        power_max_rpm:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: The engine max RPM for the given power
+        price_hourly_cents:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: The hourly rate of a rental, in cents
+        price_9_hours_cents:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: The price for a 9 hours rental, in cents
+        price_12_hours_cents:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: The price for a 12 hours rental, in cents
+        price_24_hours_cents:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: The price for a 24 hours rental, in cents
+        created_at:
+          type: string
+          format: date-time
+          description: The creation date of the car object
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: The last updated date of the car object
+        features:
+          type: array
+          items:
+            type: integer
+      required:
+      - capacity
+      - drivetrain
+      - engine_code
+      - features
+      - fuel_consumption_metric
+      - fuel_type
+      - id
+      - make
+      - model
+      - name
+      - power_hp
+      - power_max_rpm
+      - price_12_hours_cents
+      - price_24_hours_cents
+      - price_9_hours_cents
+      - price_hourly_cents
+      - slug
+      - transmission
+    CarFeature:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          allOf:
+          - $ref: '#/components/schemas/NameEnum'
+          description: |-
+            The name of the car feature
+
+            * `AIRBAG` - Airbag
+            * `AIR_CONDITIONING` - Air Conditioning
+            * `ABS` - Anti Lock Breaking System
+            * `ASSISTED_STEERING` - Assisted Steering
+            * `BLUETOOTH` - Bluetooth
+            * `DASH_CAM` - Dash Cam
+            * `DRIVE_MODES` - Drive Modes
+            * `ESC` - Electronic Stability Control
+            * `GPS_NAVIGATION` - Gps Navigation
+            * `KEYLESS_ENTRY` - Keyless Entry
+            * `LED_HEADLIGHTS` - Led Headlights
+            * `POP_UP_HEADLIGHTS` - Pop Up Headlights
+            * `POWERED_WINDOWS` - Powered Windows
+            * `REAR_CAMERA` - Rear Camera
+            * `USB_PORTS` - Usb Ports
+        created_at:
+          type: string
+          format: date-time
+          description: The creation date of the feature object
+      required:
+      - id
+      - name
+    CarMedia:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        url:
+          type: string
+          format: uri
+          description: The full path of the resource
+          maxLength: 200
+        is_thumbnail:
+          type: boolean
+          description: When set to True, the media is used as the car thumbnail
+        created_at:
+          type: string
+          format: date-time
+          description: The creation date of the media object
+        car:
+          type: integer
+          nullable: true
+      required:
+      - id
+      - is_thumbnail
+      - url
+    DrivetrainEnum:
+      enum:
+      - AWD
+      - 4WD
+      - FWD
+      - RWD
+      type: string
+      description: |-
+        * `AWD` - All Wheel Drive
+        * `4WD` - Four Wheel Drive
+        * `FWD` - Front Wheel Drive
+        * `RWD` - Rear Wheel Drive
+    FuelTypeEnum:
+      enum:
+      - B
+      - G91
+      - G95
+      - GE20
+      - GE85
+      - PB
+      type: string
+      description: |-
+        * `B` - Bensin
+        * `G91` - Gasohol 91
+        * `G95` - Gasohol 95
+        * `GE20` - Gasohol E20
+        * `GE85` - Gasohol E85
+        * `PB` - Premium Bensin
+    MakeEnum:
+      enum:
+      - HONDA
+      - MAZDA
+      - MITSUBISHI
+      - SUBARU
+      type: string
+      description: |-
+        * `HONDA` - Honda
+        * `MAZDA` - Mazda
+        * `MITSUBISHI` - Mitsubishi
+        * `SUBARU` - Subaru
+    NameEnum:
+      enum:
+      - AIRBAG
+      - AIR_CONDITIONING
+      - ABS
+      - ASSISTED_STEERING
+      - BLUETOOTH
+      - DASH_CAM
+      - DRIVE_MODES
+      - ESC
+      - GPS_NAVIGATION
+      - KEYLESS_ENTRY
+      - LED_HEADLIGHTS
+      - POP_UP_HEADLIGHTS
+      - POWERED_WINDOWS
+      - REAR_CAMERA
+      - USB_PORTS
+      type: string
+      description: |-
+        * `AIRBAG` - Airbag
+        * `AIR_CONDITIONING` - Air Conditioning
+        * `ABS` - Anti Lock Breaking System
+        * `ASSISTED_STEERING` - Assisted Steering
+        * `BLUETOOTH` - Bluetooth
+        * `DASH_CAM` - Dash Cam
+        * `DRIVE_MODES` - Drive Modes
+        * `ESC` - Electronic Stability Control
+        * `GPS_NAVIGATION` - Gps Navigation
+        * `KEYLESS_ENTRY` - Keyless Entry
+        * `LED_HEADLIGHTS` - Led Headlights
+        * `POP_UP_HEADLIGHTS` - Pop Up Headlights
+        * `POWERED_WINDOWS` - Powered Windows
+        * `REAR_CAMERA` - Rear Camera
+        * `USB_PORTS` - Usb Ports
+    PaginatedCarFeatureList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CarFeature'
+    PaginatedCarList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Car'
+    PaginatedCarMediaList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CarMedia'
+    TransmissionEnum:
+      enum:
+      - AT
+      - MT
+      type: string
+      description: |-
+        * `AT` - Automatic
+        * `MT` - Manual
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

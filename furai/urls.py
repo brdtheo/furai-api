@@ -33,4 +33,5 @@ urlpatterns: list[URLResolver | URLPattern] = [
     path("manage/", admin.site.urls),
     path("", include("car.urls")),
     path("", include("customer.urls")),
+    path("", include("booking.urls")),
 ]

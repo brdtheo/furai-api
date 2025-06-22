@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta, timezone
 
 from django.forms import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone as django_timezone
+from faker import Faker
 from rest_framework.status import HTTP_200_OK
 from rest_framework.test import APITestCase
 
@@ -13,14 +14,18 @@ from customer.tests import set_up_customer
 from .enums import BookingStatus
 from .models import Booking
 
+fake = Faker()
+
 
 def set_up_booking(car, customer):
     """Creates a Booking instance in the test DB"""
+
+    start_date = fake.future_datetime(tzinfo=timezone.utc)
     booking = Booking.objects.create(
         car=car,
         customer=customer,
-        start_date=datetime(year=2026, month=6, day=17, hour=13, tzinfo=timezone.utc),
-        end_date=datetime(year=2026, month=6, day=17, hour=19, tzinfo=timezone.utc),
+        start_date=start_date,
+        end_date=start_date + timedelta(hours=6),
         status=BookingStatus.CONFIRMED,
     )
     return booking
@@ -39,12 +44,12 @@ class BookingTestCase(TestCase):
         """Ensures a booking cannot be created if start date is in the past"""
 
         with self.assertRaises(ValidationError):
-            start_date = django_timezone.now() - timedelta(days=2)
+            start_date = fake.past_datetime(tzinfo=timezone.utc)
             Booking.objects.create(
                 car=self.car,
                 customer=self.customer,
                 start_date=start_date,
-                end_date=datetime(year=2026, month=6, day=17, tzinfo=timezone.utc),
+                end_date=fake.future_datetime(tzinfo=timezone.utc),
                 status=BookingStatus.CONFIRMED,
             )
 
@@ -57,7 +62,7 @@ class BookingTestCase(TestCase):
                 car=self.car,
                 customer=self.customer,
                 start_date=start_date,
-                end_date=datetime(year=2026, month=6, day=17),
+                end_date=fake.future_datetime(tzinfo=timezone.utc),
                 status=BookingStatus.CONFIRMED,
             )
 

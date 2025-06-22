@@ -2,6 +2,7 @@ from django.db import IntegrityError
 from django.forms import ValidationError
 from django.test import TestCase
 from django.urls import reverse
+from faker import Faker
 from rest_framework.status import HTTP_200_OK
 from rest_framework.test import APITestCase
 
@@ -9,20 +10,27 @@ from user.models import CustomUser
 
 from .models import Customer
 
+fake = Faker()
+
 
 def set_up_customer():
-    user = CustomUser.objects.create(email="paul.doe@gmail.com")
+    """Creates a User and Cusomer instance in the test DB"""
+
+    first_name = fake.first_name()
+    last_name = fake.last_name()
+    email = f"{first_name}.{last_name}@{fake.domain_name}"
+    user = CustomUser.objects.create(email=email)
     customer = Customer.objects.create(
         user=user,
-        first_name="Paul",
-        last_name="Doe",
-        address_line1="1135 Felosa Drive",
-        address_city="Los Angeles",
-        address_postal_code="90063",
-        address_state="California",
+        first_name=first_name,
+        last_name=last_name,
+        address_line1=fake.street_address(),
+        address_city=fake.city(),
+        address_postal_code=fake.postalcode(),
+        address_state=fake.state(),
         address_country="US",
-        phone="+14844145698",
-        passport="9857460SH",
+        phone=fake.phone_number(),
+        passport=fake.passport_number(),
     )
     return customer
 
@@ -37,32 +45,32 @@ class CustomerTestCase(TestCase):
 
         with self.assertRaises(IntegrityError):
             Customer.objects.create(
-                first_name=self.customer.first_name,
-                last_name=self.customer.last_name,
-                address_line1=self.customer.address_line1,
-                address_city=self.customer.address_city,
-                address_postal_code=self.customer.address_postal_code,
-                address_state=self.customer.address_state,
-                address_country=self.customer.address_country,
-                phone=self.customer.phone,
-                passport=self.customer.passport,
+                first_name=fake.first_name(),
+                last_name=fake.last_name(),
+                address_line1=fake.street_address(),
+                address_city=fake.city(),
+                address_postal_code=fake.postalcode(),
+                address_state=fake.state(),
+                address_country=fake.country_code(),
+                phone=fake.phone_number(),
+                passport=fake.passport_number(),
             )
 
     def test_create_customer_required_passport(self):
         """Ensures the passport field is required if customer's country is not Thailand"""
 
         with self.assertRaises(ValidationError):
-            user = CustomUser.objects.create(email="lucas.doe@gmail.com")
+            user = CustomUser.objects.create(email=fake.email())
             Customer.objects.create(
                 user=user,
                 first_name=self.customer.first_name,
                 last_name=self.customer.last_name,
-                address_line1=self.customer.address_line1,
-                address_city=self.customer.address_city,
-                address_postal_code=self.customer.address_postal_code,
-                address_state=self.customer.address_state,
+                address_line1=fake.street_address(),
+                address_city=fake.city(),
+                address_postal_code=fake.postalcode(),
+                address_state=fake.state(),
                 address_country="IT",
-                phone=self.customer.phone,
+                phone=fake.phone_number(),
             )
 
 

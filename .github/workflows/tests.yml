@@ -20,5 +20,8 @@ jobs:
       - name: Set DATABASE_URL from secret
         run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
 
+      - name: Set DJANGO_SECRET_KEY from secret
+        run: echo "DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" >> $GITHUB_ENV
+
       - name: Execute tests
         run: pytest

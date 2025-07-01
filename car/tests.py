@@ -1,7 +1,10 @@
 from django.db import IntegrityError
 from django.forms import ValidationError
 from django.test import TestCase
+from django.urls import reverse
 from faker import Faker
+from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
+from rest_framework.test import APITestCase
 
 from .enums import CarDrivetrain, CarFeatures, CarFuelType, CarMake, CarTransmission
 from .models import Car, CarFeature, CarMedia
@@ -37,6 +40,7 @@ def set_up_car_features():
     """Creates a list of CarFeature instances in the test DB"""
     for feature in CarFeatures:
         CarFeature.objects.create(name=feature)
+    return CarFeature.objects.all()
 
 
 def set_up_car_media_list(car: Car):
@@ -96,6 +100,34 @@ class CarTestCase(TestCase):
         assert Car.objects.count() == 1
         self.car.delete()
         assert Car.objects.count() == 0
+
+
+class CarAPITestCase(APITestCase):
+    def setUp(self):
+        car = set_up_car()
+        set_up_car_features()
+        self.car = car
+
+    def test_get_car_list(self):
+        """Correctly list all cars"""
+
+        url = reverse("car-list")
+        response = self.client.get(url, format="json")
+        assert response.status_code == HTTP_200_OK
+
+    def test_get_car_detail(self):
+        """Correctly retrieves a car instance"""
+
+        url = reverse("car-detail", kwargs={"pk": self.car.pk})
+        response = self.client.get(url, format="json")
+        assert response.status_code == HTTP_200_OK
+
+    def test_get_car_detail_not_found(self):
+        """Returns a 404 HTTP status for cars that dont exist"""
+
+        url = reverse("customer-detail", kwargs={"pk": 999999})
+        response = self.client.get(url, format="json")
+        assert response.status_code == HTTP_404_NOT_FOUND
 
 
 class CarMediaTestCase(TestCase):
@@ -159,6 +191,28 @@ class CarMediaTestCase(TestCase):
         assert new_thumbnail.is_thumbnail is True
 
 
+class CarMediaAPITestCase(APITestCase):
+    def setUp(self):
+        car = set_up_car()
+        set_up_car_features()
+        set_up_car_media_list(car)
+        self.car = car
+
+    def test_get_car_media_list(self):
+        """Correctly list all car medias"""
+
+        url = reverse("car-media-list")
+        response = self.client.get(url, format="json")
+        assert response.status_code == HTTP_200_OK
+
+    def test_get_car_media_list_car_linked(self):
+        """Correctly list all car medias related to a car instance"""
+
+        url = reverse("car-media-list", query={"car": self.car.pk})
+        response = self.client.get(url, format="json")
+        assert response.status_code == HTTP_200_OK
+
+
 class CarFeatureTestCase(TestCase):
     def setUp(self):
         car = set_up_car()
@@ -195,3 +249,32 @@ class CarFeatureTestCase(TestCase):
             car_feature.delete()
             assert CarFeature.objects.count() == count - 1
         pass
+
+
+class CarFeatureAPITestCase(APITestCase):
+    def setUp(self):
+        car = set_up_car()
+        car_feature_list = set_up_car_features()
+        self.car = car
+        self.car_feature_list = car_feature_list
+
+    def test_get_car_feature_list(self):
+        """Correctly list all car features"""
+
+        url = reverse("car-feature-list")
+        response = self.client.get(url, format="json")
+        assert response.status_code == HTTP_200_OK
+        assert response.data["count"] == len(CarFeatures)
+
+    def test_get_car_feature_list_id__in(self):
+        """Correctly list all car features from a list of id"""
+
+        id_list = [car_feature.id for car_feature in self.car_feature_list[:3]]
+        url = reverse("car-feature-list")
+        response = self.client.get(
+            url, data={"id__in": ",".join(map(str, id_list))}, format="json"
+        )
+        assert response.status_code == HTTP_200_OK
+        assert response.data["count"] == len(id_list)
+        for car_feature in response.data["results"]:
+            assert car_feature["id"] in id_list

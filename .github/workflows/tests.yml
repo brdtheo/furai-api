@@ -23,6 +23,9 @@ jobs:
       - name: Set DJANGO_SECRET_KEY from secret
         run: echo "DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" >> $GITHUB_ENV
 
+      - name: Collect static files
+        run: python manage.py collectstatic --noinput
+
       - name: Execute tests
         run: pytest --cov --cov-branch --cov-report=xml
 

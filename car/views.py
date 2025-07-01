@@ -31,13 +31,13 @@ class CarMediaList(ListAPIView):
     List car medias
     """
 
-    queryset = CarMedia.objects.all()
+    queryset = CarMedia.objects.order_by('-created_at')
     serializer_class = CarMediaSerializer
 
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         car_id = request.GET["car"] if request.GET else None
         if car_id:
-            self.queryset = CarMedia.objects.filter(car_id=car_id)
+            self.queryset = CarMedia.objects.filter(car_id=car_id).order_by('-created_at')
         return self.list(request, *args, **kwargs)
 
 
@@ -46,7 +46,7 @@ class CarFeatureList(ListAPIView):
     List car features
     """
 
-    queryset = CarFeature.objects.all()
+    queryset = CarFeature.objects.order_by('-created_at')
     serializer_class = CarFeatureSerializer
 
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
@@ -56,5 +56,5 @@ class CarFeatureList(ListAPIView):
             else None
         )
         if id__in:
-            self.queryset = CarFeature.objects.filter(id__in=id__in)
+            self.queryset = CarFeature.objects.filter(id__in=id__in).order_by('-created_at')
         return self.list(request, *args, **kwargs)

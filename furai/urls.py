@@ -31,6 +31,7 @@ urlpatterns: list[URLResolver | URLPattern] = [
         name="swagger-ui",
     ),
     path("manage/", admin.site.urls),
+    path("", include("drfpasswordless.urls")),
     path("", include("car.urls")),
     path("", include("customer.urls")),
     path("", include("booking.urls")),

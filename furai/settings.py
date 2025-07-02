@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework.authtoken",
+    "drfpasswordless",
     "drf_spectacular",
     "django_countries",
     "car",
@@ -96,11 +98,46 @@ APPEND_SLASH = False
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.TokenAuthentication",
+    ),
     "PAGE_SIZE": 10,
 }
 
+# drfpasswordless settings
+# https://github.com/aaronn/django-rest-framework-passwordless
+
+PASSWORDLESS_AUTH = {
+    # Allowed auth types, can be EMAIL, MOBILE, or both.
+    "PASSWORDLESS_AUTH_TYPES": [
+        "EMAIL",
+    ],
+    # The email the callback token is sent from
+    "PASSWORDLESS_EMAIL_NOREPLY_ADDRESS": "Furai car rental <noreply@furai-jdm.com>",
+    # Amount of time that tokens last, in seconds
+    "PASSWORDLESS_TOKEN_EXPIRE_TIME": 5 * 60,
+    # The email subject
+    "PASSWORDLESS_EMAIL_SUBJECT": "Your verification code",
+    # The email template name.
+    "PASSWORDLESS_EMAIL_TOKEN_HTML_TEMPLATE_NAME": "auth-verification-code.html",
+}
+
+# SMTP settings
+# https://resend.com/docs/send-with-django-smtp
+
+if DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_USE_TLS = True
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = "smtp.resend.com"
+    EMAIL_PORT = 587
+    EMAIL_HOST_USER = "resend"
+    EMAIL_HOST_PASSWORD = os.getenv("RESEND_API_KEY")
+
 # drf-spectacular settings
 # https://drf-spectacular.readthedocs.io/en/latest/
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "Furai API",
     "DESCRIPTION": "Furai car rental's API",

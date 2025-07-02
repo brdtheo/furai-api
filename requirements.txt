@@ -17,6 +17,7 @@ django-stubs-ext==5.2.0
 djangorestframework==3.16.0
 djangorestframework-stubs==3.16.0
 drf-spectacular==0.28.0
+drfpasswordless==1.5.9
 EditorConfig==0.17.0
 Faker==37.4.0
 gunicorn==23.0.0

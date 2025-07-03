@@ -1,3 +1,4 @@
+import random
 from datetime import timedelta, timezone
 
 from django.forms import ValidationError
@@ -8,33 +9,57 @@ from faker import Faker
 from rest_framework.status import HTTP_200_OK
 from rest_framework.test import APITestCase
 
+from car.models import Car
 from car.tests import set_up_car
-from customer.tests import set_up_customer
+from customer.tests import set_up_customer, set_up_customer_list
+from furai.tests.utils import TestClientAuthenticator
 
 from .enums import BookingStatus
 from .models import Booking
 
 fake = Faker()
 
+# A safe start date to prevent raising error from same day booking
+secure_start_date = fake.future_datetime(tzinfo=timezone.utc) + timedelta(days=2)
+
 
 def set_up_booking(car, customer):
     """Creates a Booking instance in the test DB"""
 
-    start_date = fake.future_datetime(tzinfo=timezone.utc)
     booking = Booking.objects.create(
         car=car,
         customer=customer,
-        start_date=start_date,
-        end_date=start_date + timedelta(hours=6),
+        start_date=secure_start_date,
+        end_date=secure_start_date + timedelta(hours=6),
         status=BookingStatus.CONFIRMED,
     )
     return booking
+
+
+def set_up_booking_list():
+    """Creates several Booking instances in the test DB"""
+
+    customer_list = set_up_customer_list()
+    booking_list = []
+    car_count = Car.objects.count()
+    for customer in customer_list:
+        """Creates a booking for each customer from a random car"""
+        booking = Booking.objects.create(
+            car=Car.objects.all()[random.randint(0, car_count - 1)],
+            customer=customer,
+            start_date=secure_start_date,
+            end_date=secure_start_date + timedelta(hours=6),
+            status=BookingStatus.CONFIRMED,
+        )
+        booking_list.append(booking)
+    return booking_list
 
 
 class BookingTestCase(TestCase):
     def setUp(self):
         car = set_up_car()
         customer = set_up_customer()
+        set_up_booking_list()
         booking = set_up_booking(car, customer)
         self.car = car
         self.customer = customer
@@ -78,14 +103,25 @@ class BookingAPITestCase(APITestCase):
     def setUp(self):
         car = set_up_car()
         customer = set_up_customer()
-        booking = set_up_booking(car, customer)
+        set_up_booking_list()
         self.car = car
         self.customer = customer
-        self.booking = booking
 
     def test_get_booking_list(self):
-        """Correctly list all bookings correctly"""
+        """Correctly list all bookings"""
 
         url = reverse("booking-list")
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_200_OK
+
+    def test_get_customer_booking_list(self):
+        """Correctly list all bookings linked to a customer"""
+
+        TestClientAuthenticator.authenticate(self.client, self.customer.user)
+        url = reverse("booking-list")
+        response = self.client.get(url, format="json")
+        assert response.status_code == HTTP_200_OK
+        for booking in response.data["results"]:
+            assert booking.customer == self.customer
+
+        TestClientAuthenticator.authenticate_logout(self.client)

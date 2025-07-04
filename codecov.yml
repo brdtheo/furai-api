@@ -1,0 +1,4 @@
+ignore:
+  - "**/settings.py"
+  - "**/tests.py"
+  - "furai/tests/utils.py"

@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 from urllib.parse import urlparse
 
+from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
 
 load_dotenv(".env.local")
@@ -23,22 +24,29 @@ load_dotenv(".env.local")
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
+# Overall settings"""  """
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.getenv("DEBUG", default=0))
-
 ALLOWED_HOSTS: list[str] = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 CRSF_TRUSTED_ORIGINS: list[str] = os.getenv(
     "DJANGO_CSRF_TRUSTED_ORIGINS", "https://127.0.0.1"
 ).split(",")
 CSRF_COOKIE_DOMAIN: str = os.getenv("DJANGO_CSRF_COOKIE_DOMAIN", "127.0.0.1")
-
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_COOKIE_SECURE = False if DEBUG else True
+CSRF_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SECURE = False if DEBUG else True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.furai-jdm\.com$",
+]
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "authorization",
+    "content-type",
+]
 
 # Application definition
 
@@ -53,6 +61,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "drfpasswordless",
     "drf_spectacular",
+    "corsheaders",
     "django_countries",
     "car",
     "user",
@@ -63,6 +72,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",

@@ -6,15 +6,6 @@ from .models import Customer
 from .serializers import CustomerSerializer
 
 
-class CustomerDetail(RetrieveAPIView):
-    """
-    Retrieve a customer instance
-    """
-
-    queryset = Customer.objects.all()
-    serializer_class = CustomerSerializer
-
-
 class CustomerMe(RetrieveAPIView):
     """
     Retrieve the customer instance from current authenticated user

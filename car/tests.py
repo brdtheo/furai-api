@@ -125,7 +125,7 @@ class CarAPITestCase(APITestCase):
     def test_get_car_detail_not_found(self):
         """Returns a 404 HTTP status for cars that dont exist"""
 
-        url = reverse("customer-detail", kwargs={"pk": 999999})
+        url = reverse("car-detail", kwargs={"pk": 999999})
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_404_NOT_FOUND
 

@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone as django_timezone
 from faker import Faker
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED
 from rest_framework.test import APITestCase
 
 from car.models import Car
@@ -107,15 +107,15 @@ class BookingAPITestCase(APITestCase):
         self.car = car
         self.customer = customer
 
-    def test_get_booking_list(self):
-        """Correctly list all bookings"""
+    def test_get_booking_list_unauthenticated(self):
+        """Prevent listing bookings if not authenticated"""
 
         url = reverse("booking-list")
         response = self.client.get(url, format="json")
-        assert response.status_code == HTTP_200_OK
+        assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    def test_get_customer_booking_list(self):
-        """Correctly list all bookings linked to a customer"""
+    def test_get_booking_list(self):
+        """Correctly list all bookings related to a customer"""
 
         TestClientAuthenticator.authenticate(self.client, self.customer.user)
         url = reverse("booking-list")
@@ -123,5 +123,4 @@ class BookingAPITestCase(APITestCase):
         assert response.status_code == HTTP_200_OK
         for booking in response.data["results"]:
             assert booking.customer == self.customer
-
         TestClientAuthenticator.authenticate_logout(self.client)

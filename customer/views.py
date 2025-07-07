@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions
 from rest_framework.generics import RetrieveAPIView
+from rest_framework.permissions import IsAuthenticated
 
 from .models import Customer
 from .serializers import CustomerSerializer
@@ -22,7 +22,7 @@ class CustomerMe(RetrieveAPIView):
 
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_object(self) -> Customer:
         return get_object_or_404(Customer, user=self.request.user)

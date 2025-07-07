@@ -212,6 +212,24 @@ class CarMediaAPITestCase(APITestCase):
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_200_OK
 
+    def test_get_car_media_list_is_thumbnail(self):
+        """Correctly list all car medias according to the is_thumbnail search param"""
+
+        is_thumbnail_url = reverse("car-media-list", query={"is_thumbnail": "true"})
+        is_not_thumbnail_url = reverse(
+            "car-media-list", query={"is_thumbnail": "false"}
+        )
+        thumbnail_list_response = self.client.get(is_thumbnail_url, format="json")
+        no_thumbnail_list_response = self.client.get(
+            is_not_thumbnail_url, format="json"
+        )
+        assert thumbnail_list_response.status_code == HTTP_200_OK
+        assert no_thumbnail_list_response.status_code == HTTP_200_OK
+        for car_media in thumbnail_list_response.data["results"]:
+            assert car_media['is_thumbnail'] is True
+        for car_media in no_thumbnail_list_response.data["results"]:
+            assert car_media['is_thumbnail'] is False
+
 
 class CarFeatureTestCase(TestCase):
     def setUp(self):

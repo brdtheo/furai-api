@@ -1,8 +1,7 @@
-from typing import Any
+import json
 
+from django.db.models.query import QuerySet
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.request import Request
-from rest_framework.response import Response
 
 from .models import Car, CarFeature, CarMedia
 from .serializers import CarFeatureSerializer, CarMediaSerializer, CarSerializer
@@ -31,14 +30,17 @@ class CarMediaList(ListAPIView):
     List car medias
     """
 
-    queryset = CarMedia.objects.order_by('-created_at')
     serializer_class = CarMediaSerializer
 
-    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        car_id = request.GET["car"] if request.GET else None
-        if car_id:
-            self.queryset = CarMedia.objects.filter(car_id=car_id).order_by('-created_at')
-        return self.list(request, *args, **kwargs)
+    def get_queryset(self) -> QuerySet[CarMedia]:
+        queryset = CarMedia.objects.order_by("created_at")
+        car_id = self.request.query_params.get("car")
+        is_thumbnail = self.request.query_params.get("is_thumbnail")
+        if car_id is not None:
+            queryset = queryset.filter(car_id=car_id)
+        if is_thumbnail is not None:
+            queryset = queryset.filter(is_thumbnail=json.loads(is_thumbnail))
+        return queryset
 
 
 class CarFeatureList(ListAPIView):
@@ -46,15 +48,11 @@ class CarFeatureList(ListAPIView):
     List car features
     """
 
-    queryset = CarFeature.objects.order_by('-created_at')
     serializer_class = CarFeatureSerializer
 
-    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        id__in = (
-            request.GET["id__in"].split(",")
-            if request.GET and request.GET["id__in"]
-            else None
-        )
-        if id__in:
-            self.queryset = CarFeature.objects.filter(id__in=id__in).order_by('-created_at')
-        return self.list(request, *args, **kwargs)
+    def get_queryset(self) -> QuerySet[CarFeature]:
+        queryset = CarFeature.objects.order_by("created_at")
+        id__in = self.request.query_params.get("id__in")
+        if id__in is not None:
+            queryset = queryset.filter(id__in=id__in.split(","))
+        return queryset

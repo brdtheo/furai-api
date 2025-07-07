@@ -136,7 +136,7 @@ class CustomerAPITestCase(APITestCase):
         assert response.data["user"] == self.user.id
         TestClientAuthenticator.authenticate_logout(self.client)
 
-    def test_retrieve_current_customer_anonymous_user(self):
+    def test_retrieve_current_customer_unauthenticated(self):
         """Prevent retrieving the current customer if not authenticated"""
 
         url = reverse("customer-me")

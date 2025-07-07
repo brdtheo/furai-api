@@ -160,7 +160,6 @@ paths:
       - bookings
       security:
       - tokenAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -258,28 +257,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Car'
-          description: ''
-  /customers/{id}:
-    get:
-      operationId: customers_retrieve
-      description: Retrieve a customer instance
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - customers
-      security:
-      - tokenAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Customer'
           description: ''
   /customers/me:
     get:

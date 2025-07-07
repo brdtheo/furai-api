@@ -109,11 +109,14 @@ class CustomerAPITestCase(APITestCase):
         self.customer = customer
         self.user = customer.user
 
-    def test_retrieve_customer(self):
-        """Correctly retrieves a customer instance"""
+    def test_retrieve_current_customer(self):
+        """Correctly retrieves the customer instance linked to the current user"""
 
-        url = reverse("customer-detail", kwargs={"pk": self.customer.pk})
+        TestClientAuthenticator.authenticate(self.client, self.user)
+        url = reverse("customer-me")
         response = self.client.get(url, format="json")
+        assert response.status_code == HTTP_200_OK
+        assert response.data["user"] == self.user.id
         assert response.status_code == HTTP_200_OK
         assert response.data["first_name"] == self.customer.first_name
         assert response.data["last_name"] == self.customer.last_name
@@ -125,15 +128,6 @@ class CustomerAPITestCase(APITestCase):
         assert response.data["address_country"] == self.customer.address_country
         assert response.data["phone"] == self.customer.phone
         assert response.data["passport"] == self.customer.passport
-
-    def test_retrieve_current_customer(self):
-        """Correctly retrieves the current customer instance"""
-
-        TestClientAuthenticator.authenticate(self.client, self.user)
-        url = reverse("customer-me")
-        response = self.client.get(url, format="json")
-        assert response.status_code == HTTP_200_OK
-        assert response.data["user"] == self.user.id
         TestClientAuthenticator.authenticate_logout(self.client)
 
     def test_retrieve_current_customer_unauthenticated(self):

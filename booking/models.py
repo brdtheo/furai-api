@@ -1,7 +1,4 @@
-from typing import Any, override
-
 from django.db import models
-from django.forms import ValidationError
 from django.utils import timezone
 
 from car.models import Car
@@ -47,15 +44,3 @@ class Booking(models.Model):
 
     def __str__(self) -> str:
         return f"{self.customer.name} - {self.car.name}"
-
-    @override
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        # Raise an error if the start date is in the past
-        if self.start_date < timezone.now():
-            raise ValidationError("Cannot create a booking with start_date in the past")
-
-        # Raise an error if the start date is on the same day
-        if self.start_date.date().day == timezone.now().day:
-            raise ValidationError("Cannot create a booking on the same day")
-
-        super().save(*args, **kwargs)

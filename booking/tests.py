@@ -1,26 +1,45 @@
 import random
-from datetime import timedelta, timezone
+import re
+from datetime import datetime, timedelta, timezone
 
-from django.forms import ValidationError
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone as django_timezone
 from faker import Faker
-from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+)
 from rest_framework.test import APITestCase
 
 from car.models import Car
 from car.tests import set_up_car
+from customer.models import Customer
 from customer.tests import set_up_customer, set_up_customer_list
 from furai.tests.utils import TestClientAuthenticator
+from user.models import CustomUser
 
 from .enums import BookingStatus
+from .errors import (
+    BOOKING_CAR_UNAVAILABLE_TIME_PERIOD_ERROR,
+    BOOKING_CUSTOMER_PASSPORT_REQUIRED_ERROR,
+    BOOKING_END_DATE_BEFORE_START_DATE_ERROR,
+    BOOKING_END_DATE_IN_THE_PAST_ERROR,
+    BOOKING_SAME_DAY_BOOKING_ERROR,
+    BOOKING_START_DATE_IN_THE_PAST_ERROR,
+)
 from .models import Booking
 
 fake = Faker()
 
-# A safe start date to prevent raising error from same day booking
-secure_start_date = fake.future_datetime(tzinfo=timezone.utc) + timedelta(days=2)
+# Safe dates to prevent raising error from same day booking
+secure_future_date = fake.future_datetime(tzinfo=timezone.utc) + timedelta(days=2)
+secure_past_date = fake.past_datetime(tzinfo=timezone.utc) - timedelta(days=2)
+secure_booking_start_date = fake.future_datetime(tzinfo=timezone.utc) + timedelta(
+    days=3
+)
+secure_booking_end_date = secure_booking_start_date + timedelta(hours=3)
 
 
 def set_up_booking(car, customer):
@@ -29,8 +48,8 @@ def set_up_booking(car, customer):
     booking = Booking.objects.create(
         car=car,
         customer=customer,
-        start_date=secure_start_date,
-        end_date=secure_start_date + timedelta(hours=6),
+        start_date=secure_future_date,
+        end_date=secure_future_date + timedelta(hours=6),
         status=BookingStatus.CONFIRMED,
     )
     return booking
@@ -47,8 +66,8 @@ def set_up_booking_list():
         booking = Booking.objects.create(
             car=Car.objects.all()[random.randint(0, car_count - 1)],
             customer=customer,
-            start_date=secure_start_date,
-            end_date=secure_start_date + timedelta(hours=6),
+            start_date=secure_future_date,
+            end_date=secure_future_date + timedelta(hours=6),
             status=BookingStatus.CONFIRMED,
         )
         booking_list.append(booking)
@@ -64,32 +83,6 @@ class BookingTestCase(TestCase):
         self.car = car
         self.customer = customer
         self.booking = booking
-
-    def test_create_booking_start_date_past(self):
-        """Ensures a booking cannot be created if start date is in the past"""
-
-        with self.assertRaises(ValidationError):
-            start_date = fake.past_datetime(tzinfo=timezone.utc)
-            Booking.objects.create(
-                car=self.car,
-                customer=self.customer,
-                start_date=start_date,
-                end_date=fake.future_datetime(tzinfo=timezone.utc),
-                status=BookingStatus.CONFIRMED,
-            )
-
-    def test_create_booking_start_date_same_day(self):
-        """Ensures a booking cannot be created if start date is current day"""
-
-        with self.assertRaises(ValidationError):
-            start_date = django_timezone.now()
-            Booking.objects.create(
-                car=self.car,
-                customer=self.customer,
-                start_date=start_date,
-                end_date=fake.future_datetime(tzinfo=timezone.utc),
-                status=BookingStatus.CONFIRMED,
-            )
 
     def test_update_booking_status(self):
         """Ensures a booking status can be updated correctly"""
@@ -110,7 +103,7 @@ class BookingAPITestCase(APITestCase):
     def test_get_booking_list_unauthenticated(self):
         """Prevent listing bookings if not authenticated"""
 
-        url = reverse("booking-list")
+        url = reverse("bookings")
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_401_UNAUTHORIZED
 
@@ -118,9 +111,381 @@ class BookingAPITestCase(APITestCase):
         """Correctly list all bookings related to a customer"""
 
         TestClientAuthenticator.authenticate(self.client, self.customer.user)
-        url = reverse("booking-list")
+        url = reverse("bookings")
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_200_OK
         for booking in response.data["results"]:
             assert booking.customer == self.customer
         TestClientAuthenticator.authenticate_logout(self.client)
+
+    def test_create_booking_start_date_same_day(self):
+        """Return an error error if start date is current day"""
+
+        url = reverse("bookings")
+        response = self.client.post(
+            url,
+            data={
+                "start_date": (
+                    datetime.now(tz=timezone.utc) + timedelta(hours=1)
+                ).isoformat(),
+                "end_date": secure_booking_end_date,
+                "car": self.car.pk,
+                "email": self.customer.user.email,
+                "first_name": self.customer.first_name,
+                "last_name": self.customer.last_name,
+                "address_line1": self.customer.address_line1,
+                "address_line2": self.customer.address_line2,
+                "address_city": self.customer.address_city,
+                "address_postal_code": self.customer.address_postal_code,
+                "address_state": self.customer.address_state,
+                "address_country": "US",
+                "phone": self.customer.phone,
+                "passport": self.customer.passport,
+            },
+            format="json",
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert (
+            re.match(
+                BOOKING_SAME_DAY_BOOKING_ERROR.detail[0].title().lower(),
+                response.data["non_field_errors"][0].lower(),
+            )
+            is not None
+        )
+
+    def test_create_booking_start_date_past(self):
+        """Return an error if the start date is in the past"""
+
+        url = reverse("bookings")
+        response = self.client.post(
+            url,
+            data={
+                "start_date": secure_past_date,
+                "end_date": secure_booking_end_date,
+                "car": self.car.pk,
+                "email": self.customer.user.email,
+                "first_name": self.customer.first_name,
+                "last_name": self.customer.last_name,
+                "address_line1": self.customer.address_line1,
+                "address_line2": self.customer.address_line2,
+                "address_city": self.customer.address_city,
+                "address_postal_code": self.customer.address_postal_code,
+                "address_state": self.customer.address_state,
+                "address_country": "US",
+                "phone": self.customer.phone,
+                "passport": self.customer.passport,
+            },
+            format="json",
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert (
+            re.match(
+                BOOKING_START_DATE_IN_THE_PAST_ERROR.detail[0].title().lower(),
+                response.data["non_field_errors"][0].lower(),
+            )
+            is not None
+        )
+
+    def test_create_booking_end_date_past(self):
+        """Return an error if the end date is in the past"""
+
+        url = reverse("bookings")
+        response = self.client.post(
+            url,
+            data={
+                "start_date": secure_booking_start_date,
+                "end_date": secure_past_date,
+                "car": self.car.pk,
+                "email": self.customer.user.email,
+                "first_name": self.customer.first_name,
+                "last_name": self.customer.last_name,
+                "address_line1": self.customer.address_line1,
+                "address_line2": self.customer.address_line2,
+                "address_city": self.customer.address_city,
+                "address_postal_code": self.customer.address_postal_code,
+                "address_state": self.customer.address_state,
+                "address_country": "US",
+                "phone": self.customer.phone,
+                "passport": self.customer.passport,
+            },
+            format="json",
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert (
+            re.match(
+                BOOKING_END_DATE_IN_THE_PAST_ERROR.detail[0].title().lower(),
+                response.data["non_field_errors"][0].lower(),
+            )
+            is not None
+        )
+
+    def test_create_booking_end_date_before_start_date(self):
+        """Return an error if the end date is before the the start date"""
+
+        url = reverse("bookings")
+        response = self.client.post(
+            url,
+            data={
+                "start_date": secure_booking_start_date,
+                "end_date": secure_booking_start_date - timedelta(hours=6),
+                "car": self.car.pk,
+                "email": self.customer.user.email,
+                "first_name": self.customer.first_name,
+                "last_name": self.customer.last_name,
+                "address_line1": self.customer.address_line1,
+                "address_line2": self.customer.address_line2,
+                "address_city": self.customer.address_city,
+                "address_postal_code": self.customer.address_postal_code,
+                "address_state": self.customer.address_state,
+                "address_country": "US",
+                "phone": self.customer.phone,
+                "passport": self.customer.passport,
+            },
+            format="json",
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert (
+            re.match(
+                BOOKING_END_DATE_BEFORE_START_DATE_ERROR.detail[0].title().lower(),
+                response.data["non_field_errors"][0].lower(),
+            )
+            is not None
+        )
+
+    def test_create_booking_required_passport(self):
+        """Return an error error if customer is a foreign national and passport number is empty"""
+
+        url = reverse("bookings")
+        response = self.client.post(
+            url,
+            data={
+                "start_date": secure_booking_start_date,
+                "end_date": secure_booking_end_date,
+                "car": self.car.pk,
+                "email": self.customer.user.email,
+                "first_name": self.customer.first_name,
+                "last_name": self.customer.last_name,
+                "address_line1": self.customer.address_line1,
+                "address_line2": self.customer.address_line2,
+                "address_city": self.customer.address_city,
+                "address_postal_code": self.customer.address_postal_code,
+                "address_state": self.customer.address_state,
+                "address_country": "IT",
+                "phone": self.customer.phone,
+                "passport": "",
+            },
+            format="json",
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert (
+            re.match(
+                BOOKING_CUSTOMER_PASSPORT_REQUIRED_ERROR.detail[0].title().lower(),
+                response.data["non_field_errors"][0].lower(),
+            )
+            is not None
+        )
+
+    def test_create_booking_invalid_country_code(self):
+        """Return an error if customer's country is not a valid country"""
+        url = reverse("bookings")
+        response = self.client.post(
+            url,
+            data={
+                "start_date": secure_booking_start_date,
+                "end_date": secure_booking_end_date,
+                "car": self.car.pk,
+                "email": self.customer.user.email,
+                "first_name": self.customer.first_name,
+                "last_name": self.customer.last_name,
+                "address_line1": self.customer.address_line1,
+                "address_line2": self.customer.address_line2,
+                "address_city": self.customer.address_city,
+                "address_postal_code": self.customer.address_postal_code,
+                "address_state": self.customer.address_state,
+                "address_country": "ZZ",
+                "phone": self.customer.phone,
+                "passport": self.customer.passport,
+            },
+            format="json",
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert (
+            re.search(
+                "is not a valid choice",
+                response.data["address_country"][0].title().lower(),
+            )
+            is not None
+        )
+
+    def test_create_booking_new_user(self):
+        """Create a new user along with booking when no user is associated to the email"""
+
+        url = reverse("bookings")
+        first_name = fake.first_name()
+        last_name = fake.last_name()
+        email = f"{first_name}.{last_name}@{fake.domain_name()}"
+        response = self.client.post(
+            url,
+            data={
+                "start_date": secure_booking_start_date,
+                "end_date": secure_booking_end_date,
+                "car": self.car.pk,
+                "email": email,
+                "first_name": first_name,
+                "last_name": last_name,
+                "address_line1": fake.street_address(),
+                "address_line2": "",
+                "address_city": fake.city(),
+                "address_postal_code": fake.postcode(),
+                "address_state": "",
+                "address_country": fake.country_code(),
+                "phone": f"{fake.country_calling_code()}{fake.msisdn()}",
+                "passport": fake.passport_number(),
+            },
+            format="json",
+        )
+        assert response.status_code == HTTP_201_CREATED
+        assert CustomUser.objects.get(email=email)
+
+    def test_create_booking_new_customer(self):
+        """Create a new customer along with booking when no customer is associated to the email"""
+
+        url = reverse("bookings")
+        first_name = fake.first_name()
+        last_name = fake.last_name()
+        email = f"{first_name}.{last_name}@{fake.domain_name()}"
+        response = self.client.post(
+            url,
+            data={
+                "start_date": secure_booking_start_date,
+                "end_date": secure_booking_end_date,
+                "car": self.car.pk,
+                "email": email,
+                "first_name": first_name,
+                "last_name": last_name,
+                "address_line1": fake.street_address(),
+                "address_line2": "",
+                "address_city": fake.city(),
+                "address_postal_code": fake.postcode(),
+                "address_state": "",
+                "address_country": fake.country_code(),
+                "phone": f"{fake.country_calling_code()}{fake.msisdn()}",
+                "passport": fake.passport_number(),
+            },
+            format="json",
+        )
+        assert response.status_code == HTTP_201_CREATED
+        customer = Customer.objects.get(user__email=email)
+        assert customer.first_name == first_name
+        assert customer.last_name == last_name
+        assert customer.user.email == email
+
+    def test_create_booking_override_customer_info(self):
+        """Correctly override customer informations by booking request payload"""
+
+        url = reverse("bookings")
+        address_line1 = fake.street_address()
+        address_city = fake.city()
+        address_postal_code = fake.postcode()
+        address_country = fake.country_code()
+        phone = f"{fake.country_calling_code()}{fake.msisdn()}"
+        response = self.client.post(
+            url,
+            data={
+                "start_date": secure_booking_start_date,
+                "end_date": secure_booking_end_date,
+                "car": self.car.pk,
+                "email": self.customer.user.email,
+                "first_name": self.customer.first_name,
+                "last_name": self.customer.last_name,
+                "address_line1": address_line1,
+                "address_line2": self.customer.address_line2,
+                "address_city": address_city,
+                "address_postal_code": address_postal_code,
+                "address_state": self.customer.address_state,
+                "address_country": address_country,
+                "phone": phone,
+                "passport": self.customer.passport,
+            },
+            format="json",
+        )
+        self.customer.refresh_from_db()
+        assert response.status_code == HTTP_201_CREATED
+        assert self.customer.address_line1 == address_line1
+        assert self.customer.address_city == address_city
+        assert self.customer.address_postal_code == address_postal_code
+        assert self.customer.address_country == address_country
+        assert self.customer.phone == phone
+
+    def test_create_booking_car_not_available(self):
+        """Return an error if the car is unavailable in the requested time period"""
+
+        base_data = {
+            "start_date": secure_booking_start_date,
+            "end_date": secure_booking_end_date,
+            "car": self.car.pk,
+            "email": self.customer.user.email,
+            "first_name": self.customer.first_name,
+            "last_name": self.customer.last_name,
+            "address_line1": self.customer.address_line1,
+            "address_line2": self.customer.address_line2,
+            "address_city": self.customer.address_city,
+            "address_postal_code": self.customer.address_postal_code,
+            "address_state": self.customer.address_state,
+            "address_country": fake.country_code(),
+            "phone": self.customer.phone,
+            "passport": self.customer.passport,
+        }
+        Booking.objects.create(
+            car=self.car,
+            customer=self.customer,
+            start_date=secure_booking_start_date,
+            end_date=secure_booking_end_date,
+        )
+
+        url = reverse("bookings")
+        # The requested booking starts before an existing booking ends
+        response_overlap_start_date = self.client.post(
+            url,
+            data={
+                **base_data,
+                "start_date": secure_booking_end_date - timedelta(minutes=5),
+                "end_date": secure_booking_end_date + timedelta(hours=3),
+            },
+            format="json",
+        )
+        # The requested booking ends after an existing booking starts
+        response_overlap_end_date = self.client.post(
+            url,
+            data={
+                **base_data,
+                "start_date": secure_booking_start_date - timedelta(hours=3),
+                "end_date": secure_booking_end_date + timedelta(minutes=5),
+            },
+            format="json",
+        )
+        # The requested booking time period is inside an existing booking
+        response_overlap_within = self.client.post(
+            url,
+            data={
+                **base_data,
+                "start_date": secure_booking_start_date + timedelta(minutes=5),
+                "end_date": secure_booking_end_date - timedelta(minutes=5),
+            },
+            format="json",
+        )
+
+        response_list = [
+            response_overlap_start_date,
+            response_overlap_end_date,
+            response_overlap_within,
+        ]
+        for response in response_list:
+            assert response.status_code == HTTP_400_BAD_REQUEST
+            assert (
+                re.match(
+                    BOOKING_CAR_UNAVAILABLE_TIME_PERIOD_ERROR.detail[0].title().lower(),
+                    response.data["non_field_errors"][0].title().lower(),
+                )
+                is not None
+            )

@@ -1,8 +1,10 @@
-from typing import cast
+from typing import Any, cast
 
 from django.db.models.query import QuerySet
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from user.models import CustomUser
 
@@ -10,13 +12,12 @@ from .models import Booking
 from .serializers import BookingSerializer
 
 
-class BookingView(ListAPIView):
+class BookingView(ListAPIView, CreateAPIView):
     """
-    List or create Bookings
+    List all bookings related to a customer or create Bookings
     """
 
     serializer_class = BookingSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self) -> QuerySet[Booking]:
         user: CustomUser = cast(
@@ -25,3 +26,18 @@ class BookingView(ListAPIView):
         )
         queryset = Booking.objects.filter(customer__user=user).order_by("-created_at")
         return queryset
+
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """List all bookings related to a customer"""
+
+        self.permission_classes = [IsAuthenticated]
+        self.check_permissions(self.request)
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """
+        Create a new booking.
+        Automatically create the user if none associated to the email.
+        Automatically create/update a customer with payload infos.
+        """
+        return self.create(request, *args, **kwargs)

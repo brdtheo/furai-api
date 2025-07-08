@@ -1,5 +1,7 @@
 from django.urls import path
 
-from .views import BookingList
+from .views import BookingView
 
-urlpatterns = [path("bookings", BookingList.as_view(), name="booking-list")]
+urlpatterns = [
+    path("bookings", BookingView.as_view(), name="bookings"),
+]

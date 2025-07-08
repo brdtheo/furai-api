@@ -10,7 +10,11 @@ from .models import Booking
 from .serializers import BookingSerializer
 
 
-class BookingList(ListAPIView):
+class BookingView(ListAPIView):
+    """
+    List or create Bookings
+    """
+
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated]
 

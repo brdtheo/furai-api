@@ -19,7 +19,7 @@ def set_up_customer():
 
     first_name = fake.first_name()
     last_name = fake.last_name()
-    email = f"{first_name}.{last_name}@{fake.domain_name}"
+    email = f"{first_name}.{last_name}@{fake.domain_name()}"
     user = CustomUser.objects.create(email=email)
     customer = Customer.objects.create(
         user=user,
@@ -29,7 +29,7 @@ def set_up_customer():
         address_city=fake.city(),
         address_postal_code=fake.postalcode(),
         address_state=fake.state(),
-        address_country="US",
+        address_country=fake.country_code(),
         phone=fake.phone_number(),
         passport=fake.passport_number(),
     )

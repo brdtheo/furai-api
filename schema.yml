@@ -149,6 +149,7 @@ paths:
   /bookings:
     get:
       operationId: bookings_list
+      description: List all bookings related to a customer
       parameters:
       - name: page
         required: false
@@ -160,12 +161,43 @@ paths:
       - bookings
       security:
       - tokenAuth: []
+      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedBookingList'
+          description: ''
+    post:
+      operationId: bookings_create
+      description: |-
+        Create a new booking.
+        Automatically create the user if none associated to the email.
+        Automatically create/update a customer with payload infos.
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Booking'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
           description: ''
   /car-features:
     get:
@@ -783,6 +815,43 @@ components:
         id:
           type: integer
           readOnly: true
+        email:
+          type: string
+          writeOnly: true
+        first_name:
+          type: string
+          writeOnly: true
+        last_name:
+          type: string
+          writeOnly: true
+        address_line1:
+          type: string
+          writeOnly: true
+        address_line2:
+          type: string
+          writeOnly: true
+          nullable: true
+        address_city:
+          type: string
+          writeOnly: true
+        address_postal_code:
+          type: string
+          writeOnly: true
+        address_state:
+          type: string
+          writeOnly: true
+          nullable: true
+        address_country:
+          allOf:
+          - $ref: '#/components/schemas/AddressCountryEnum'
+          writeOnly: true
+        phone:
+          type: string
+          writeOnly: true
+        passport:
+          type: string
+          writeOnly: true
+          nullable: true
         start_date:
           type: string
           format: date-time
@@ -794,6 +863,7 @@ components:
         status:
           allOf:
           - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
           description: |-
             The current booking status
 
@@ -810,12 +880,21 @@ components:
           description: The car linked to the booking
         customer:
           type: integer
+          readOnly: true
           description: The customer linked to the booking
       required:
+      - address_city
+      - address_country
+      - address_line1
+      - address_postal_code
       - car
       - customer
+      - email
       - end_date
+      - first_name
       - id
+      - last_name
+      - phone
       - start_date
       - status
     CallbackTokenAuth:

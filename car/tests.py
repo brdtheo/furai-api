@@ -79,9 +79,9 @@ class CarTestCase(TestCase):
     def test_add_linked_feature(self):
         """Correctly link a car feature to a car"""
 
-        car_feature = CarFeature.objects.get(pk=1)
+        car_feature = CarFeature.objects.first()
         self.car.features.add(car_feature)
-        linked_feature = self.car.features.get(pk=1)
+        linked_feature = self.car.features.first()
         assert linked_feature is not None
         assert linked_feature.name == car_feature.name
 

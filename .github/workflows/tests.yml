@@ -27,7 +27,7 @@ jobs:
         run: python manage.py collectstatic --noinput
 
       - name: Execute tests
-        run: pytest --cov --cov-branch --cov-report=xml
+        run: pytest -n auto --cov --cov-branch --cov-report=xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

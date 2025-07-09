@@ -817,6 +817,7 @@ components:
           readOnly: true
         email:
           type: string
+          format: email
           writeOnly: true
         first_name:
           type: string

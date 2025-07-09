@@ -23,7 +23,7 @@ THAILAND_COUNTRY_CODE = "TH"
 
 
 class BookingSerializer(serializers.ModelSerializer, CountryFieldMixin):
-    email = serializers.CharField(write_only=True)
+    email = serializers.EmailField(write_only=True)
     first_name = serializers.CharField(write_only=True)
     last_name = serializers.CharField(write_only=True)
     address_line1 = serializers.CharField(write_only=True)

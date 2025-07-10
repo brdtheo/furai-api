@@ -3,7 +3,7 @@ from django.forms import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from faker import Faker
-from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED
+from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 from rest_framework.test import APITestCase
 
 from furai.tests.utils import TestClientAuthenticator
@@ -136,3 +136,38 @@ class CustomerAPITestCase(APITestCase):
         url = reverse("customer-me")
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    def test_update_customer(self):
+        """Correctly update a customer instance"""
+
+        TestClientAuthenticator.authenticate(self.client, self.user)
+        url = reverse("customer-detail", kwargs={"pk": self.customer.id})
+        first_name = fake.first_name()
+        response = self.client.patch(
+            url, data={"first_name": first_name}, format="json"
+        )
+        assert response.status_code == HTTP_200_OK
+        self.customer.refresh_from_db()
+        assert self.customer.first_name == first_name
+        TestClientAuthenticator.authenticate_logout(self.client)
+
+    def test_update_customer_unauthenticated(self):
+        """Prevent updating the current customer if not authenticated"""
+
+        url = reverse("customer-detail", kwargs={"pk": self.customer.id})
+        response = self.client.patch(
+            url, data={"first_name": fake.first_name()}, format="json"
+        )
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    def test_update_customer_not_authorized(self):
+        """Prevent updating the current customer if user is not linked to it"""
+
+        random_customer = set_up_customer()
+        TestClientAuthenticator.authenticate(self.client, random_customer.user)
+        url = reverse("customer-detail", kwargs={"pk": self.customer.id})
+        response = self.client.patch(
+            url, data={"first_name": fake.first_name()}, format="json"
+        )
+        assert response.status_code == HTTP_403_FORBIDDEN
+        TestClientAuthenticator.authenticate_logout(self.client)

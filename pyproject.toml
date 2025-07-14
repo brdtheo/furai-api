@@ -1,7 +1,3 @@
-[tool.djlint]
-profile="django"
-ignore="H031"
-
 [tool.pyright]
 typeCheckingMode = "strict" # "off", "basic", "standard", "strict"
 reportUnknownVariableType = false # silent for Django models

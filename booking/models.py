@@ -1,7 +1,10 @@
+import resend
 from django.db import models
+from django.template.loader import render_to_string
 from django.utils import timezone
+from resend.emails._email import Email
 
-from car.models import Car
+from car.models import Car, CarMedia
 from customer.models import Customer
 
 from .enums import BookingStatus
@@ -44,3 +47,26 @@ class Booking(models.Model):
 
     def __str__(self) -> str:
         return f"{self.customer.name} - {self.car.name}"
+
+    def send_confirmation_email(self) -> Email:
+        """Send a confirmation email to the user when a new Booking is created"""
+
+        queryset = CarMedia.objects.filter(car=self.car, is_thumbnail=True)
+        car_thumbnail = queryset[0].url if queryset.exists() else None
+        html_body = render_to_string(
+            "booking-confirmation.html",
+            {
+                "start_date": self.start_date,
+                "end_date": self.end_date,
+                "car_thumbnail": car_thumbnail,
+                "car_name": self.car.name,
+                "status": self.status,
+            },
+        )
+        params: resend.Emails.SendParams = {
+            "from": "Furai car rental <noreply@furai-jdm.com>",
+            "to": [self.customer.user.email],
+            "subject": "Your booking confirmation",
+            "html": html_body,
+        }
+        return resend.Emails.send(params)

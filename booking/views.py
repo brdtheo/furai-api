@@ -5,6 +5,7 @@ from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
 
 from user.models import CustomUser
 
@@ -36,8 +37,12 @@ class BookingView(ListAPIView, CreateAPIView):
 
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
-        Create a new booking.
+        Create a new booking and send a confirmation email.
         Automatically create the user if none associated to the email.
         Automatically create/update a customer with payload infos.
         """
         return self.create(request, *args, **kwargs)
+
+    def perform_create(self, serializer: BaseSerializer) -> None:
+        booking: Booking = serializer.save()
+        booking.send_confirmation_email()

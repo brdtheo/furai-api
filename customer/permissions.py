@@ -2,7 +2,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
-from customer.models import Customer
+from .models import Customer
 
 
 class IsCustomerUser(IsAuthenticated):

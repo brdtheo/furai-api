@@ -1,3 +1,5 @@
+from typing import Self
+
 import resend
 from django.db import models
 from django.template.loader import render_to_string
@@ -49,7 +51,7 @@ class Booking(models.Model):
         return f"{self.customer.name} - {self.car.name}"
 
     def send_confirmation_email(self) -> Email:
-        """Send a confirmation email to the user when a new Booking is created"""
+        """Send an email to the user when a new Booking is created"""
 
         queryset = CarMedia.objects.filter(car=self.car, is_thumbnail=True)
         car_thumbnail = queryset[0].url if queryset.exists() else None
@@ -70,3 +72,46 @@ class Booking(models.Model):
             "html": html_body,
         }
         return resend.Emails.send(params)
+
+    def send_cancellation_email(self) -> Email:
+        """Send an email to the user when a Booking is cancelled"""
+
+        queryset = CarMedia.objects.filter(car=self.car, is_thumbnail=True)
+        car_thumbnail = queryset[0].url if queryset.exists() else None
+        html_body = render_to_string(
+            "booking-cancellation.html",
+            {
+                "start_date": self.start_date,
+                "end_date": self.end_date,
+                "car_thumbnail": car_thumbnail,
+                "car_name": self.car.name,
+                "status": self.status,
+            },
+        )
+        params: resend.Emails.SendParams = {
+            "from": "Furai car rental <noreply@furai-jdm.com>",
+            "to": [self.customer.user.email],
+            "subject": "Your booking has been cancelled",
+            "html": html_body,
+        }
+        return resend.Emails.send(params)
+
+    def cancel(
+        self,
+        is_staff_origin: bool = False,
+    ) -> Self:
+        """Cancel a booking"""
+
+        if is_staff_origin:
+            self.status = BookingStatus.CANCELED_BY_STAFF
+        else:
+            self.status = BookingStatus.CANCELED_BY_CUSTOMER
+        self.save()
+        return self
+
+    def mark_as_complete(self) -> Self:
+        """Set a booking status as complete"""
+
+        self.status = BookingStatus.COMPLETED
+        self.save()
+        return self

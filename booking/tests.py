@@ -3,13 +3,14 @@ import re
 from datetime import datetime, timedelta, timezone
 
 from django.test import TestCase
-from django.urls import reverse
 from faker import Faker
+from rest_framework.reverse import reverse
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
 )
 from rest_framework.test import APITestCase
 
@@ -22,6 +23,8 @@ from user.models import CustomUser
 
 from .enums import BookingStatus
 from .errors import (
+    BOOKING_ALREADY_CANCELED_ERROR,
+    BOOKING_CANCEL_COMPLETED_ERROR,
     BOOKING_CAR_UNAVAILABLE_TIME_PERIOD_ERROR,
     BOOKING_CUSTOMER_PASSPORT_REQUIRED_ERROR,
     BOOKING_END_DATE_BEFORE_START_DATE_ERROR,
@@ -91,19 +94,34 @@ class BookingTestCase(TestCase):
         self.booking.save()
         assert self.booking.status == BookingStatus.COMPLETED
 
+    def test_cancel_booking_by_customer(self):
+        """Ensures a booking is cancelled correctly by a customer"""
+
+        self.booking.cancel()
+        assert self.booking.status == BookingStatus.CANCELED_BY_CUSTOMER
+
+    def test_cancel_booking_by_staff(self):
+        """Ensures a booking is cancelled correctly by a staff member"""
+
+        self.booking.cancel(True)
+        assert self.booking.status == BookingStatus.CANCELED_BY_STAFF
+
 
 class BookingAPITestCase(APITestCase):
     def setUp(self):
         car = set_up_car()
         customer = set_up_customer()
-        set_up_booking_list()
+        booking = set_up_booking(car, customer)
+        booking_list = set_up_booking_list()
         self.car = car
         self.customer = customer
+        self.booking = booking
+        self.booking_list = booking_list
 
     def test_get_booking_list_unauthenticated(self):
         """Prevent listing bookings if not authenticated"""
 
-        url = reverse("bookings")
+        url = reverse("bookings-list")
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_401_UNAUTHORIZED
 
@@ -111,17 +129,17 @@ class BookingAPITestCase(APITestCase):
         """Correctly list all bookings related to a customer"""
 
         TestClientAuthenticator.authenticate(self.client, self.customer.user)
-        url = reverse("bookings")
+        url = reverse("bookings-list")
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_200_OK
         for booking in response.data["results"]:
-            assert booking.customer == self.customer
+            assert booking["customer"] == self.customer.id
         TestClientAuthenticator.authenticate_logout(self.client)
 
     def test_create_booking_start_date_same_day(self):
         """Return an error error if start date is current day"""
 
-        url = reverse("bookings")
+        url = reverse("bookings-list")
         response = self.client.post(
             url,
             data={
@@ -156,7 +174,7 @@ class BookingAPITestCase(APITestCase):
     def test_create_booking_start_date_past(self):
         """Return an error if the start date is in the past"""
 
-        url = reverse("bookings")
+        url = reverse("bookings-list")
         response = self.client.post(
             url,
             data={
@@ -189,7 +207,7 @@ class BookingAPITestCase(APITestCase):
     def test_create_booking_end_date_past(self):
         """Return an error if the end date is in the past"""
 
-        url = reverse("bookings")
+        url = reverse("bookings-list")
         response = self.client.post(
             url,
             data={
@@ -222,7 +240,7 @@ class BookingAPITestCase(APITestCase):
     def test_create_booking_end_date_before_start_date(self):
         """Return an error if the end date is before the the start date"""
 
-        url = reverse("bookings")
+        url = reverse("bookings-list")
         response = self.client.post(
             url,
             data={
@@ -255,7 +273,7 @@ class BookingAPITestCase(APITestCase):
     def test_create_booking_required_passport(self):
         """Return an error error if customer is a foreign national and passport number is empty"""
 
-        url = reverse("bookings")
+        url = reverse("bookings-list")
         response = self.client.post(
             url,
             data={
@@ -287,7 +305,7 @@ class BookingAPITestCase(APITestCase):
 
     def test_create_booking_invalid_country_code(self):
         """Return an error if customer's country is not a valid country"""
-        url = reverse("bookings")
+        url = reverse("bookings-list")
         response = self.client.post(
             url,
             data={
@@ -320,7 +338,7 @@ class BookingAPITestCase(APITestCase):
     def test_create_booking_new_user(self):
         """Create a new user along with booking when no user is associated to the email"""
 
-        url = reverse("bookings")
+        url = reverse("bookings-list")
         first_name = fake.first_name()
         last_name = fake.last_name()
         email = f"{first_name}.{last_name}@{fake.domain_name()}"
@@ -350,7 +368,7 @@ class BookingAPITestCase(APITestCase):
     def test_create_booking_new_customer(self):
         """Create a new customer along with booking when no customer is associated to the email"""
 
-        url = reverse("bookings")
+        url = reverse("bookings-list")
         first_name = fake.first_name()
         last_name = fake.last_name()
         email = f"{first_name}.{last_name}@{fake.domain_name()}"
@@ -383,7 +401,7 @@ class BookingAPITestCase(APITestCase):
     def test_create_booking_override_customer_info(self):
         """Correctly override customer informations by booking request payload"""
 
-        url = reverse("bookings")
+        url = reverse("bookings-list")
         address_line1 = fake.street_address()
         address_city = fake.city()
         address_postal_code = fake.postcode()
@@ -443,7 +461,7 @@ class BookingAPITestCase(APITestCase):
             end_date=secure_booking_end_date,
         )
 
-        url = reverse("bookings")
+        url = reverse("bookings-list")
         # The requested booking starts before an existing booking ends
         response_overlap_start_date = self.client.post(
             url,
@@ -489,3 +507,59 @@ class BookingAPITestCase(APITestCase):
                 )
                 is not None
             )
+
+    def test_cancel_booking_unauthenticated(self):
+        """Prevent cancelling a booking if not authenticated"""
+
+        url = reverse("bookings-cancel", kwargs={"pk": self.booking.id})
+        response = self.client.post(url, format="json")
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    def test_cancel_booking_not_authorized(self):
+        """Prevent cancelling a booking if user is not the owner"""
+
+        TestClientAuthenticator.authenticate(self.client, self.booking.customer.user)
+        url = reverse("bookings-cancel", kwargs={"pk": self.booking_list[0].id})
+        response = self.client.post(url, format="json")
+        assert response.status_code == HTTP_403_FORBIDDEN
+        TestClientAuthenticator.authenticate_logout(self.client)
+
+    def test_cancel_completed_booking(self):
+        """Prevent cancelling a booking if completed"""
+
+        self.booking.status = BookingStatus.COMPLETED
+        self.booking.save()
+        TestClientAuthenticator.authenticate(self.client, self.booking.customer.user)
+        url = reverse("bookings-cancel", kwargs={"pk": self.booking.id})
+        response = self.client.post(url, format="json")
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert re.match(
+            BOOKING_CANCEL_COMPLETED_ERROR.detail["status"].title().lower(),
+            response.data["status"].lower(),
+        )
+        TestClientAuthenticator.authenticate_logout(self.client)
+
+    def test_already_cancelled_booking(self):
+        """Prevent cancelling a booking if already cancelled"""
+
+        self.booking.status = BookingStatus.CANCELED_BY_CUSTOMER
+        self.booking.save()
+        TestClientAuthenticator.authenticate(self.client, self.booking.customer.user)
+        url = reverse("bookings-cancel", kwargs={"pk": self.booking.id})
+        response = self.client.post(url, format="json")
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert re.match(
+            BOOKING_ALREADY_CANCELED_ERROR.detail["status"].title().lower(),
+            response.data["status"].lower(),
+        )
+        TestClientAuthenticator.authenticate_logout(self.client)
+
+    def test_cancel_booking(self):
+        """Cancel a booking correctly"""
+
+        TestClientAuthenticator.authenticate(self.client, self.booking.customer.user)
+        url = reverse("bookings-cancel", kwargs={"pk": self.booking.id})
+        response = self.client.post(url, format="json")
+        assert response.status_code == HTTP_200_OK
+        assert response.data["status"] == BookingStatus.CANCELED_BY_CUSTOMER
+        TestClientAuthenticator.authenticate_logout(self.client)

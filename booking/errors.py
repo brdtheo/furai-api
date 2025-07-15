@@ -30,3 +30,13 @@ BOOKING_CUSTOMER_PASSPORT_REQUIRED_ERROR = exceptions.ValidationError(
     detail="A passport number is required for foreign national",
     code=str(status.HTTP_400_BAD_REQUEST),
 )
+
+BOOKING_ALREADY_CANCELED_ERROR = exceptions.ValidationError(
+    detail={"status": "This booking is already canceled"},
+    code=str(status.HTTP_400_BAD_REQUEST),
+)
+
+BOOKING_CANCEL_COMPLETED_ERROR = exceptions.ValidationError(
+    detail={"status": "A completed booking cannot be canceled"},
+    code=str(status.HTTP_400_BAD_REQUEST),
+)

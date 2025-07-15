@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+{% block submit_buttons_bottom %}
+  {% if opts.model_name == "booking" and original.status == "CONFIRMED" %}
+    <div class="submit-row">
+      <input class="deletelink"
+             type="submit"
+             value="Cancel this booking"
+             name="_cancel" />
+    </div>
+  {% endif %}
+  {{ block.super }}
+{% endblock submit_buttons_bottom %}

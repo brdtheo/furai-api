@@ -27,11 +27,19 @@ def mark_as_complete(
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ("customer", "car", "start_date", "end_date", "status")
+    list_display = (
+        "customer",
+        "car",
+        "price_cents",
+        "start_date",
+        "end_date",
+        "status",
+    )
     search_fields = (
         "first_name",
         "last_name",
     )
+    readonly_fields = ("price_cents",)
     list_filter = ("customer", "car")
     list_per_page = 30
     actions = [mark_as_complete, cancel]
@@ -42,3 +50,7 @@ class BookingAdmin(admin.ModelAdmin):
             self.message_user(request, "This booking has been cancelled")
             return HttpResponseRedirect(".")
         return super().response_change(request, obj)
+
+    @admin.display(description="Price", empty_value="Free")
+    def price_cents(self, obj: Booking) -> str:
+        return f"{obj.price_cents}THB"

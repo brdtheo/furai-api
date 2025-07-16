@@ -35,6 +35,10 @@ class Booking(models.Model):
         help_text="The end date of the booking",
         db_comment="The end date of the booking",
     )
+    price_cents = models.IntegerField(
+        help_text="The total price of the booking, in cents",
+        db_comment="The total price of the booking, in cents",
+    )
     status = models.CharField(
         choices=BookingStatus,
         help_text="The current booking status",

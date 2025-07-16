@@ -40,3 +40,8 @@ BOOKING_CANCEL_COMPLETED_ERROR = exceptions.ValidationError(
     detail={"status": "A completed booking cannot be canceled"},
     code=str(status.HTTP_400_BAD_REQUEST),
 )
+
+BOOKING_NEGATIVE_PRICE_ERROR = exceptions.ValidationError(
+    detail={"price_cents": "The price of a booking cannot be negative"},
+    code=str(status.HTTP_400_BAD_REQUEST),
+)

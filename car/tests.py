@@ -28,10 +28,12 @@ def set_up_car() -> Car:
         engine_code=fake.pystr(min_chars=5, max_chars=8).upper(),
         power_hp=fake.pyint(150, 400),
         power_max_rpm=fake.pyint(6500, 9000, 500),
-        price_hourly_cents=fake.pyint(30000, 80000, 500),
-        price_9_hours_cents=fake.pyint(280000, 320000, 500),
-        price_12_hours_cents=fake.pyint(325000, 375000, 5000),
-        price_24_hours_cents=fake.pyint(400000, 450000, 5000),
+        price_hourly_cents=fake.pyint(800, 1000, 500),
+        price_three_hours_cents=fake.pyint(2000, 2500, 500),
+        price_six_hours_cents=fake.pyint(3800, 4200, 500),
+        price_nine_hours_cents=fake.pyint(4800, 5500, 500),
+        price_twelve_hours_cents=fake.pyint(6000, 7000, 5000),
+        price_twenty_four_hours_cents=fake.pyint(7200, 8500, 5000),
     )
     return car
 

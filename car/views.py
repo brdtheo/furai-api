@@ -12,7 +12,7 @@ class CarList(ListAPIView, RetrieveAPIView):
     List cars
     """
 
-    queryset = Car.objects.order_by("price_24_hours_cents")
+    queryset = Car.objects.order_by("price_twenty_four_hours_cents")
     serializer_class = CarSerializer
 
 

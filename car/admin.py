@@ -30,7 +30,7 @@ class CarAdmin(admin.ModelAdmin):
     )
     list_filter = ("transmission", "drivetrain", "fuel_type", "features")
     filter_horizontal = ("features",)
-    list_per_page = 5
+    list_per_page = 10
 
 
 @admin.register(CarFeature)

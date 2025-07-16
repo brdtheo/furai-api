@@ -18,6 +18,7 @@ from car.models import Car
 from car.tests import set_up_car
 from customer.models import Customer
 from customer.tests import set_up_customer, set_up_customer_list
+from furai.tests.mocks import enable_stripe_mock
 from furai.tests.utils import TestClientAuthenticator
 from user.models import CustomUser
 
@@ -82,6 +83,7 @@ def set_up_booking_list():
 
 class BookingTestCase(TestCase):
     def setUp(self):
+        enable_stripe_mock(self)
         car = set_up_car()
         customer = set_up_customer()
         set_up_booking_list()
@@ -112,6 +114,7 @@ class BookingTestCase(TestCase):
 
 class BookingAPITestCase(APITestCase):
     def setUp(self):
+        enable_stripe_mock(self)
         car = set_up_car()
         customer = set_up_customer()
         booking = set_up_booking(car, customer)
@@ -503,7 +506,7 @@ class BookingAPITestCase(APITestCase):
             customer=self.customer,
             start_date=secure_booking_start_date,
             end_date=secure_booking_end_date,
-            price_cents=base_data.get('price_cents')
+            price_cents=base_data.get("price_cents"),
         )
 
         url = reverse("bookings-list")

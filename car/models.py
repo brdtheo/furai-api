@@ -95,15 +95,23 @@ class Car(models.Model):
         help_text="The hourly rate of a rental, in cents",
         db_comment="The hourly rate of a rental, in cents",
     )
-    price_9_hours_cents = models.IntegerField(
+    price_three_hours_cents = models.IntegerField(
+        help_text="The price for a 3 hours rental, in cents",
+        db_comment="The price for a 3 hours rental, in cents",
+    )
+    price_six_hours_cents = models.IntegerField(
+        help_text="The price for a 6 hours rental, in cents",
+        db_comment="The price for a 6 hours rental, in cents",
+    )
+    price_nine_hours_cents = models.IntegerField(
         help_text="The price for a 9 hours rental, in cents",
         db_comment="The price for a 9 hours rental, in cents",
     )
-    price_12_hours_cents = models.IntegerField(
+    price_twelve_hours_cents = models.IntegerField(
         help_text="The price for a 12 hours rental, in cents",
         db_comment="The price for a 12 hours rental, in cents",
     )
-    price_24_hours_cents = models.IntegerField(
+    price_twenty_four_hours_cents = models.IntegerField(
         help_text="The price for a 24 hours rental, in cents",
         db_comment="The price for a 24 hours rental, in cents",
     )

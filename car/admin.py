@@ -10,15 +10,19 @@ class CarAdmin(admin.ModelAdmin):
         "name",
         "slug",
         "price_hourly_cents",
-        "price_9_hours_cents",
-        "price_12_hours_cents",
-        "price_24_hours_cents",
+        "price_three_hours_cents",
+        "price_six_hours_cents",
+        "price_nine_hours_cents",
+        "price_twelve_hours_cents",
+        "price_twenty_four_hours_cents",
     )
     list_editable = (
         "price_hourly_cents",
-        "price_9_hours_cents",
-        "price_12_hours_cents",
-        "price_24_hours_cents",
+        "price_three_hours_cents",
+        "price_six_hours_cents",
+        "price_nine_hours_cents",
+        "price_twelve_hours_cents",
+        "price_twenty_four_hours_cents",
     )
     search_fields = (
         "make",

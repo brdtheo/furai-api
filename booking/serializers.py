@@ -14,6 +14,7 @@ from .errors import (
     BOOKING_CUSTOMER_PASSPORT_REQUIRED_ERROR,
     BOOKING_END_DATE_BEFORE_START_DATE_ERROR,
     BOOKING_END_DATE_IN_THE_PAST_ERROR,
+    BOOKING_NEGATIVE_PRICE_ERROR,
     BOOKING_SAME_DAY_BOOKING_ERROR,
     BOOKING_START_DATE_IN_THE_PAST_ERROR,
 )
@@ -55,6 +56,11 @@ class BookingSerializer(serializers.ModelSerializer, CountryFieldMixin):
         address_country = attrs.get("address_country")
         passport = attrs.get("passport")
         car = attrs.get("car")
+        price_cents = attrs.get("price_cents")
+
+        # Raise an error if the price is negative
+        if price_cents is not None and price_cents < 0:
+            raise BOOKING_NEGATIVE_PRICE_ERROR
 
         # Raise an error if one of the dates is in the past
         if start_date is not None and end_date is not None:

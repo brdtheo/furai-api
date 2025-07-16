@@ -11,6 +11,10 @@ from user.models import CustomUser
 class Customer(models.Model):
     """Representation of a Customer"""
 
+    stripe_id = models.CharField(
+        help_text="The Stripe customer identifier linked to the customer",
+        db_comment="The Stripe customer identifier linked to the customer",
+    )
     user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,

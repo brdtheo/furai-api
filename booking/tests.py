@@ -29,6 +29,7 @@ from .errors import (
     BOOKING_CUSTOMER_PASSPORT_REQUIRED_ERROR,
     BOOKING_END_DATE_BEFORE_START_DATE_ERROR,
     BOOKING_END_DATE_IN_THE_PAST_ERROR,
+    BOOKING_NEGATIVE_PRICE_ERROR,
     BOOKING_SAME_DAY_BOOKING_ERROR,
     BOOKING_START_DATE_IN_THE_PAST_ERROR,
 )
@@ -50,6 +51,7 @@ def set_up_booking(car, customer):
 
     booking = Booking.objects.create(
         car=car,
+        price_cents=fake.pyint(300000, 1000000),
         customer=customer,
         start_date=secure_future_date,
         end_date=secure_future_date + timedelta(hours=6),
@@ -68,6 +70,7 @@ def set_up_booking_list():
         """Creates a booking for each customer from a random car"""
         booking = Booking.objects.create(
             car=Car.objects.all()[random.randint(0, car_count - 1)],
+            price_cents=fake.pyint(300000, 1000000),
             customer=customer,
             start_date=secure_future_date,
             end_date=secure_future_date + timedelta(hours=6),
@@ -136,6 +139,37 @@ class BookingAPITestCase(APITestCase):
             assert booking["customer"] == self.customer.id
         TestClientAuthenticator.authenticate_logout(self.client)
 
+    def test_create_booking_negative_price(self):
+        """Return an error error if price is negative"""
+
+        url = reverse("bookings-list")
+        response = self.client.post(
+            url,
+            data={
+                "start_date": secure_booking_start_date,
+                "end_date": secure_booking_end_date,
+                "car": self.car.pk,
+                "price_cents": fake.pyint(-10000, -1),
+                "email": self.customer.user.email,
+                "first_name": self.customer.first_name,
+                "last_name": self.customer.last_name,
+                "address_line1": self.customer.address_line1,
+                "address_line2": self.customer.address_line2,
+                "address_city": self.customer.address_city,
+                "address_postal_code": self.customer.address_postal_code,
+                "address_state": self.customer.address_state,
+                "address_country": "US",
+                "phone": self.customer.phone,
+                "passport": self.customer.passport,
+            },
+            format="json",
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert re.match(
+            BOOKING_NEGATIVE_PRICE_ERROR.detail["price_cents"].title().lower(),
+            response.data["price_cents"][0].lower(),
+        )
+
     def test_create_booking_start_date_same_day(self):
         """Return an error error if start date is current day"""
 
@@ -148,6 +182,7 @@ class BookingAPITestCase(APITestCase):
                 ).isoformat(),
                 "end_date": secure_booking_end_date,
                 "car": self.car.pk,
+                "price_cents": fake.pyint(300000, 1000000),
                 "email": self.customer.user.email,
                 "first_name": self.customer.first_name,
                 "last_name": self.customer.last_name,
@@ -181,6 +216,7 @@ class BookingAPITestCase(APITestCase):
                 "start_date": secure_past_date,
                 "end_date": secure_booking_end_date,
                 "car": self.car.pk,
+                "price_cents": fake.pyint(300000, 1000000),
                 "email": self.customer.user.email,
                 "first_name": self.customer.first_name,
                 "last_name": self.customer.last_name,
@@ -214,6 +250,7 @@ class BookingAPITestCase(APITestCase):
                 "start_date": secure_booking_start_date,
                 "end_date": secure_past_date,
                 "car": self.car.pk,
+                "price_cents": fake.pyint(300000, 1000000),
                 "email": self.customer.user.email,
                 "first_name": self.customer.first_name,
                 "last_name": self.customer.last_name,
@@ -247,6 +284,7 @@ class BookingAPITestCase(APITestCase):
                 "start_date": secure_booking_start_date,
                 "end_date": secure_booking_start_date - timedelta(hours=6),
                 "car": self.car.pk,
+                "price_cents": fake.pyint(300000, 1000000),
                 "email": self.customer.user.email,
                 "first_name": self.customer.first_name,
                 "last_name": self.customer.last_name,
@@ -280,6 +318,7 @@ class BookingAPITestCase(APITestCase):
                 "start_date": secure_booking_start_date,
                 "end_date": secure_booking_end_date,
                 "car": self.car.pk,
+                "price_cents": fake.pyint(300000, 1000000),
                 "email": self.customer.user.email,
                 "first_name": self.customer.first_name,
                 "last_name": self.customer.last_name,
@@ -312,6 +351,7 @@ class BookingAPITestCase(APITestCase):
                 "start_date": secure_booking_start_date,
                 "end_date": secure_booking_end_date,
                 "car": self.car.pk,
+                "price_cents": fake.pyint(300000, 1000000),
                 "email": self.customer.user.email,
                 "first_name": self.customer.first_name,
                 "last_name": self.customer.last_name,
@@ -348,6 +388,7 @@ class BookingAPITestCase(APITestCase):
                 "start_date": secure_booking_start_date,
                 "end_date": secure_booking_end_date,
                 "car": self.car.pk,
+                "price_cents": fake.pyint(300000, 1000000),
                 "email": email,
                 "first_name": first_name,
                 "last_name": last_name,
@@ -378,6 +419,7 @@ class BookingAPITestCase(APITestCase):
                 "start_date": secure_booking_start_date,
                 "end_date": secure_booking_end_date,
                 "car": self.car.pk,
+                "price_cents": fake.pyint(300000, 1000000),
                 "email": email,
                 "first_name": first_name,
                 "last_name": last_name,
@@ -413,6 +455,7 @@ class BookingAPITestCase(APITestCase):
                 "start_date": secure_booking_start_date,
                 "end_date": secure_booking_end_date,
                 "car": self.car.pk,
+                "price_cents": fake.pyint(300000, 1000000),
                 "email": self.customer.user.email,
                 "first_name": self.customer.first_name,
                 "last_name": self.customer.last_name,
@@ -442,6 +485,7 @@ class BookingAPITestCase(APITestCase):
             "start_date": secure_booking_start_date,
             "end_date": secure_booking_end_date,
             "car": self.car.pk,
+            "price_cents": fake.pyint(300000, 1000000),
             "email": self.customer.user.email,
             "first_name": self.customer.first_name,
             "last_name": self.customer.last_name,
@@ -459,6 +503,7 @@ class BookingAPITestCase(APITestCase):
             customer=self.customer,
             start_date=secure_booking_start_date,
             end_date=secure_booking_end_date,
+            price_cents=base_data.get('price_cents')
         )
 
         url = reverse("bookings-list")

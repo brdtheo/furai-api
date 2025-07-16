@@ -3,7 +3,7 @@ from typing import Any, cast
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
-from rest_framework.generics import CreateAPIView, ListAPIView
+from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -11,6 +11,7 @@ from rest_framework.serializers import BaseSerializer
 from rest_framework.status import HTTP_200_OK
 from rest_framework.viewsets import GenericViewSet
 
+from customer.models import Customer
 from user.models import CustomUser
 
 from .enums import BookingStatus
@@ -20,7 +21,7 @@ from .permissions import IsBookingOwner
 from .serializers import BookingSerializer
 
 
-class BookingViewSet(CreateAPIView, ListAPIView, GenericViewSet):
+class BookingViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
     """
     List all bookings related to a customer or create Bookings
     """
@@ -32,25 +33,29 @@ class BookingViewSet(CreateAPIView, ListAPIView, GenericViewSet):
             CustomUser,
             self.request.user,
         )
-        queryset = Booking.objects.filter(customer__user=user).order_by("-created_at")
+        customer = get_object_or_404(Customer, user=user.pk)
+        queryset = Booking.objects.filter(customer=customer).order_by("-created_at")
         return queryset
 
-    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+    def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """List all bookings related to a customer"""
 
         self.permission_classes = [IsAuthenticated]
         self.check_permissions(request)
-        return self.list(request, *args, **kwargs)
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
-    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+    def perform_create(self, serializer: BaseSerializer) -> None:
         """
         Create a new booking and send a confirmation email.
         Automatically create the user if none associated to the email.
         Automatically create/update a customer with payload infos.
         """
-        return self.create(request, *args, **kwargs)
-
-    def perform_create(self, serializer: BaseSerializer) -> None:
         booking: Booking = serializer.save()
         booking.send_confirmation_email()
 

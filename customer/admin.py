@@ -12,6 +12,7 @@ class CustomerAdmin(admin.ModelAdmin):
         "first_name",
         "last_name",
     )
+    readonly_fields = ("stripe_id",)
     list_filter = ("address_country",)
     list_per_page = 30
 

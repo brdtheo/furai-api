@@ -6,6 +6,7 @@ from faker import Faker
 from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 from rest_framework.test import APITestCase
 
+from furai.tests.mocks import enable_stripe_mock
 from furai.tests.utils import TestClientAuthenticator
 from user.models import CustomUser
 
@@ -65,6 +66,7 @@ def set_up_customer_list():
 
 class CustomerTestCase(TestCase):
     def setUp(self):
+        enable_stripe_mock(self)
         customer = set_up_customer()
         self.customer = customer
         self.user = customer.user
@@ -105,6 +107,7 @@ class CustomerTestCase(TestCase):
 
 class CustomerAPITestCase(APITestCase):
     def setUp(self):
+        enable_stripe_mock(self)
         customer = set_up_customer()
         self.customer = customer
         self.user = customer.user

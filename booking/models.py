@@ -43,7 +43,7 @@ class Booking(models.Model):
         choices=BookingStatus,
         help_text="The current booking status",
         db_comment="The current booking status",
-        default=BookingStatus.CONFIRMED,
+        default=BookingStatus.UNPAID,
     )
     created_at = models.DateTimeField(
         help_text="The creation date of the booking",

@@ -56,7 +56,7 @@ def set_up_booking(car, customer):
         customer=customer,
         start_date=secure_future_date,
         end_date=secure_future_date + timedelta(hours=6),
-        status=BookingStatus.CONFIRMED,
+        status=BookingStatus.UNPAID,
     )
     return booking
 
@@ -75,7 +75,7 @@ def set_up_booking_list():
             customer=customer,
             start_date=secure_future_date,
             end_date=secure_future_date + timedelta(hours=6),
-            status=BookingStatus.CONFIRMED,
+            status=BookingStatus.UNPAID,
         )
         booking_list.append(booking)
     return booking_list

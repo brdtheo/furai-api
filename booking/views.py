@@ -1,5 +1,7 @@
+import os
 from typing import Any, cast
 
+import stripe
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
@@ -7,7 +9,6 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.serializers import BaseSerializer
 from rest_framework.status import HTTP_200_OK
 from rest_framework.viewsets import GenericViewSet
 
@@ -19,6 +20,8 @@ from .errors import BOOKING_ALREADY_CANCELED_ERROR, BOOKING_CANCEL_COMPLETED_ERR
 from .models import Booking
 from .permissions import IsBookingOwner
 from .serializers import BookingSerializer
+
+stripe.api_key = os.getenv("STRIPE_API_KEY")
 
 
 class BookingViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
@@ -50,14 +53,26 @@ class BookingViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    def perform_create(self, serializer: BaseSerializer) -> None:
-        """
-        Create a new booking and send a confirmation email.
-        Automatically create the user if none associated to the email.
-        Automatically create/update a customer with payload infos.
-        """
-        booking: Booking = serializer.save()
-        booking.send_confirmation_email()
+    @action(detail=True, methods=["post"])
+    def create_payment_intent(
+        self, request: Request, *args: Any, **kwargs: str
+    ) -> Response:
+        """Create a Stripe payment intent to pay a booking"""
+
+        # Check permissions
+        self.permission_classes = [IsBookingOwner]
+        booking = get_object_or_404(Booking, pk=kwargs["pk"])
+        self.check_object_permissions(request, booking)
+
+        # Create Stripe payment intent
+        payment_intent = stripe.PaymentIntent.create(
+            amount=booking.price_cents,
+            currency="thb",
+            customer=booking.customer.stripe_id,
+            metadata={"booking_id": str(booking.pk)},
+        )
+
+        return Response(payment_intent, status=HTTP_200_OK)
 
     @action(detail=True, methods=["post"])
     def cancel(self, request: Request, *args: Any, **kwargs: Any) -> Response:

@@ -20,6 +20,8 @@ from django.urls import URLPattern, URLResolver, include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework import routers
 
+from .views import WebhookView
+
 router = routers.DefaultRouter()
 
 
@@ -31,6 +33,7 @@ urlpatterns: list[URLResolver | URLPattern] = [
         name="swagger-ui",
     ),
     path("manage/", admin.site.urls),
+    path("webhook", WebhookView.as_view(), name="webhook"),
     path("", include("drfpasswordless.urls")),
     path("", include("car.urls")),
     path("", include("customer.urls")),

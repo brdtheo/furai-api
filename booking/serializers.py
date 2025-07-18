@@ -8,7 +8,6 @@ from rest_framework import serializers
 from customer.models import Customer
 from user.models import CustomUser
 
-from .enums import BookingStatus
 from .errors import (
     BOOKING_CAR_UNAVAILABLE_TIME_PERIOD_ERROR,
     BOOKING_CUSTOMER_PASSPORT_REQUIRED_ERROR,
@@ -142,7 +141,5 @@ class BookingSerializer(serializers.ModelSerializer, CountryFieldMixin):
         validated_data.pop("phone")
         validated_data.pop("passport")
 
-        booking = Booking.objects.create(
-            customer=customer, status=BookingStatus.CONFIRMED, **validated_data
-        )
+        booking = Booking.objects.create(customer=customer, **validated_data)
         return booking

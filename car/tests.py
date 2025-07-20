@@ -113,21 +113,21 @@ class CarAPITestCase(APITestCase):
     def test_get_car_list(self):
         """Correctly list all cars"""
 
-        url = reverse("car-list")
+        url = reverse("cars-list")
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_200_OK
 
     def test_get_car_detail(self):
         """Correctly retrieves a car instance"""
 
-        url = reverse("car-detail", kwargs={"pk": self.car.pk})
+        url = reverse("cars-detail", kwargs={"pk": self.car.pk})
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_200_OK
 
     def test_get_car_detail_not_found(self):
         """Returns a 404 HTTP status for cars that dont exist"""
 
-        url = reverse("car-detail", kwargs={"pk": 999999})
+        url = reverse("cars-detail", kwargs={"pk": 999999})
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_404_NOT_FOUND
 
@@ -203,23 +203,23 @@ class CarMediaAPITestCase(APITestCase):
     def test_get_car_media_list(self):
         """Correctly list all car medias"""
 
-        url = reverse("car-media-list")
+        url = reverse("car-medias-list")
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_200_OK
 
     def test_get_car_media_list_car_linked(self):
         """Correctly list all car medias related to a car instance"""
 
-        url = reverse("car-media-list", query={"car": self.car.pk})
+        url = reverse("car-medias-list", query={"car": self.car.pk})
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_200_OK
 
     def test_get_car_media_list_is_thumbnail(self):
         """Correctly list all car medias according to the is_thumbnail search param"""
 
-        is_thumbnail_url = reverse("car-media-list", query={"is_thumbnail": "true"})
+        is_thumbnail_url = reverse("car-medias-list", query={"is_thumbnail": "true"})
         is_not_thumbnail_url = reverse(
-            "car-media-list", query={"is_thumbnail": "false"}
+            "car-medias-list", query={"is_thumbnail": "false"}
         )
         thumbnail_list_response = self.client.get(is_thumbnail_url, format="json")
         no_thumbnail_list_response = self.client.get(
@@ -281,7 +281,7 @@ class CarFeatureAPITestCase(APITestCase):
     def test_get_car_feature_list(self):
         """Correctly list all car features"""
 
-        url = reverse("car-feature-list")
+        url = reverse("car-features-list")
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_200_OK
         assert response.data["count"] == len(CarFeatures)
@@ -290,7 +290,7 @@ class CarFeatureAPITestCase(APITestCase):
         """Correctly list all car features from a list of id"""
 
         id_list = [car_feature.id for car_feature in self.car_feature_list[:3]]
-        url = reverse("car-feature-list")
+        url = reverse("car-features-list")
         response = self.client.get(
             url, data={"id__in": ",".join(map(str, id_list))}, format="json"
         )

@@ -111,6 +111,11 @@ class BookingTestCase(TestCase):
         self.booking.cancel(True)
         assert self.booking.status == BookingStatus.CANCELED_BY_STAFF
 
+    def test_representation_string(self):
+        """Returns the instance representation correctly"""
+
+        assert self.booking.__str__() == f"{self.customer.name} - {self.car.name}"
+
 
 class BookingAPITestCase(APITestCase):
     def setUp(self):

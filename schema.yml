@@ -230,6 +230,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/Booking'
           description: ''
+  /bookings/{id}/create_payment_intent:
+    post:
+      operationId: bookings_create_payment_intent_create
+      description: Create a Stripe payment intent to pay a booking
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Booking'
+        required: true
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+          description: ''
   /car-features:
     get:
       operationId: car_features_list
@@ -279,7 +313,7 @@ paths:
   /cars:
     get:
       operationId: cars_list
-      description: List cars
+      description: List or retrieve cars
       parameters:
       - name: page
         required: false
@@ -302,12 +336,13 @@ paths:
   /cars/{id}:
     get:
       operationId: cars_retrieve
-      description: Retrieve a car instance
+      description: List or retrieve cars
       parameters:
       - in: path
         name: id
         schema:
           type: integer
+        description: A unique integer value identifying this car.
         required: true
       tags:
       - cars
@@ -322,14 +357,36 @@ paths:
                 $ref: '#/components/schemas/Car'
           description: ''
   /customers/{id}:
-    put:
-      operationId: customers_update
-      description: Update a given customer instance
+    get:
+      operationId: customers_retrieve
+      description: Retrieve or update a customer instance
       parameters:
       - in: path
         name: id
         schema:
           type: integer
+        description: A unique integer value identifying this customer.
+        required: true
+      tags:
+      - customers
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: ''
+    put:
+      operationId: customers_update
+      description: Retrieve or update a customer instance
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this customer.
         required: true
       tags:
       - customers
@@ -356,12 +413,13 @@ paths:
           description: ''
     patch:
       operationId: customers_partial_update
-      description: Update a given customer instance
+      description: Retrieve or update a customer instance
       parameters:
       - in: path
         name: id
         schema:
           type: integer
+        description: A unique integer value identifying this customer.
         required: true
       tags:
       - customers
@@ -400,6 +458,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/Customer'
           description: ''
+  /webhook:
+    post:
+      operationId: webhook_create
+      description: Receive events from Stripe API
+      tags:
+      - webhook
+      security:
+      - tokenAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
 components:
   schemas:
     AddressCountryEnum:
@@ -956,6 +1026,11 @@ components:
           type: string
           format: date-time
           description: The end date of the booking
+        price_cents:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: The total price of the booking, in cents
         status:
           allOf:
           - $ref: '#/components/schemas/StatusEnum'
@@ -964,7 +1039,8 @@ components:
             The current booking status
 
             * `COMPLETED` - Completed
-            * `CONFIRMED` - Confirmed
+            * `ACTIVE` - Active
+            * `UNPAID` - Unpaid
             * `CANCELED_BY_STAFF` - Canceled By Staff
             * `CANCELED_BY_CUSTOMER` - Canceled By Customer
         created_at:
@@ -991,6 +1067,7 @@ components:
       - id
       - last_name
       - phone
+      - price_cents
       - start_date
       - status
     CallbackTokenAuth:
@@ -1117,17 +1194,27 @@ components:
           maximum: 2147483647
           minimum: -2147483648
           description: The hourly rate of a rental, in cents
-        price_9_hours_cents:
+        price_three_hours_cents:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: The price for a 3 hours rental, in cents
+        price_six_hours_cents:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: The price for a 6 hours rental, in cents
+        price_nine_hours_cents:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
           description: The price for a 9 hours rental, in cents
-        price_12_hours_cents:
+        price_twelve_hours_cents:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
           description: The price for a 12 hours rental, in cents
-        price_24_hours_cents:
+        price_twenty_four_hours_cents:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
@@ -1158,10 +1245,12 @@ components:
       - name
       - power_hp
       - power_max_rpm
-      - price_12_hours_cents
-      - price_24_hours_cents
-      - price_9_hours_cents
       - price_hourly_cents
+      - price_nine_hours_cents
+      - price_six_hours_cents
+      - price_three_hours_cents
+      - price_twelve_hours_cents
+      - price_twenty_four_hours_cents
       - slug
       - transmission
     CarFeature:
@@ -2040,13 +2129,15 @@ components:
     StatusEnum:
       enum:
       - COMPLETED
-      - CONFIRMED
+      - ACTIVE
+      - UNPAID
       - CANCELED_BY_STAFF
       - CANCELED_BY_CUSTOMER
       type: string
       description: |-
         * `COMPLETED` - Completed
-        * `CONFIRMED` - Confirmed
+        * `ACTIVE` - Active
+        * `UNPAID` - Unpaid
         * `CANCELED_BY_STAFF` - Canceled By Staff
         * `CANCELED_BY_CUSTOMER` - Canceled By Customer
     TransmissionEnum:

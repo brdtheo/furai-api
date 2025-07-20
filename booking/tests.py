@@ -111,6 +111,13 @@ class BookingTestCase(TestCase):
         self.booking.cancel(True)
         assert self.booking.status == BookingStatus.CANCELED_BY_STAFF
 
+    def test_mark_as_complete(self):
+        """Set a booking status to complete correctly"""
+
+        self.booking.mark_as_complete()
+        self.booking.refresh_from_db()
+        assert self.booking.status == BookingStatus.COMPLETED
+
     def test_representation_string(self):
         """Returns the instance representation correctly"""
 

@@ -1,10 +1,21 @@
-from django.urls import URLPattern, URLResolver, path
+from rest_framework.routers import DefaultRouter
 
-from .views import CarDetail, CarFeatureList, CarList, CarMediaList
+from .views import CarFeatureViewSet, CarMediaViewSet, CarViewSet
 
-urlpatterns: list[URLResolver | URLPattern] = [
-    path("cars", CarList.as_view(), name="car-list"),
-    path("cars/<int:pk>", CarDetail.as_view(), name="car-detail"),
-    path("car-medias", CarMediaList.as_view(), name="car-media-list"),
-    path("car-features", CarFeatureList.as_view(), name="car-feature-list"),
-]
+router = DefaultRouter(trailing_slash=False)
+router.register(
+    "cars",
+    CarViewSet,
+    basename="cars",
+)
+router.register(
+    "car-medias",
+    CarMediaViewSet,
+    basename="car-medias",
+)
+router.register(
+    "car-features",
+    CarFeatureViewSet,
+    basename="car-features",
+)
+urlpatterns = router.urls

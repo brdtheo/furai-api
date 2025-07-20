@@ -2,5 +2,5 @@ ignore:
   - "**/settings.py"
   - "**/tests.py"
   - "**/admin.py"
-  - "furai/tests/**"
+  - "furai/**"
   - "conftest.py"

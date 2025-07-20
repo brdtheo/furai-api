@@ -103,6 +103,11 @@ class CarTestCase(TestCase):
         self.car.delete()
         assert Car.objects.count() == 0
 
+    def test_representation_string(self):
+        """Returns the instance representation correctly"""
+
+        assert self.car.__str__() == self.car.name
+
 
 class CarAPITestCase(APITestCase):
     def setUp(self):
@@ -192,6 +197,12 @@ class CarMediaTestCase(TestCase):
         assert thumbnail.is_thumbnail is False
         assert new_thumbnail.is_thumbnail is True
 
+    def test_representation_string(self):
+        """Returns the instance representation correctly"""
+
+        car_media = CarMedia.objects.first()
+        assert car_media.__str__() == car_media.url
+
 
 class CarMediaAPITestCase(APITestCase):
     def setUp(self):
@@ -228,9 +239,9 @@ class CarMediaAPITestCase(APITestCase):
         assert thumbnail_list_response.status_code == HTTP_200_OK
         assert no_thumbnail_list_response.status_code == HTTP_200_OK
         for car_media in thumbnail_list_response.data["results"]:
-            assert car_media['is_thumbnail'] is True
+            assert car_media["is_thumbnail"] is True
         for car_media in no_thumbnail_list_response.data["results"]:
-            assert car_media['is_thumbnail'] is False
+            assert car_media["is_thumbnail"] is False
 
 
 class CarFeatureTestCase(TestCase):
@@ -269,6 +280,12 @@ class CarFeatureTestCase(TestCase):
             car_feature.delete()
             assert CarFeature.objects.count() == count - 1
         pass
+
+    def test_representation_string(self):
+        """Returns the instance representation correctly"""
+
+        car_feature = CarFeature.objects.first()
+        assert car_feature.__str__() == car_feature.name
 
 
 class CarFeatureAPITestCase(APITestCase):

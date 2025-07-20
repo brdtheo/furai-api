@@ -45,3 +45,10 @@ class CustomUserTestCase(TestCase):
         assert user.is_active is True
         assert user.is_staff is True
         assert user.is_superuser is True
+
+    def test_representation_string(self):
+        """Returns the instance representation correctly"""
+
+        user_email = fake.email()
+        user = CustomUser.objects.create(email=user_email)
+        assert user.__str__() == user.email

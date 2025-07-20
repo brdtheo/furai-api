@@ -104,6 +104,14 @@ class CustomerTestCase(TestCase):
                 phone=fake.phone_number(),
             )
 
+    def test_representation_string(self):
+        """Returns the instance representation correctly"""
+
+        assert (
+            self.customer.__str__()
+            == f"{self.customer.first_name} {self.customer.last_name}"
+        )
+
 
 class CustomerAPITestCase(APITestCase):
     def setUp(self):

@@ -1,31 +1,23 @@
 import json
 
 from django.db.models.query import QuerySet
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.mixins import ListModelMixin
+from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
 
 from .models import Car, CarFeature, CarMedia
 from .serializers import CarFeatureSerializer, CarMediaSerializer, CarSerializer
 
 
-class CarList(ListAPIView, RetrieveAPIView):
+class CarViewSet(ReadOnlyModelViewSet):
     """
-    List cars
+    List or retrieve cars
     """
 
     queryset = Car.objects.order_by("price_twenty_four_hours_cents")
     serializer_class = CarSerializer
 
 
-class CarDetail(RetrieveAPIView):
-    """
-    Retrieve a car instance
-    """
-
-    queryset = Car.objects.all()
-    serializer_class = CarSerializer
-
-
-class CarMediaList(ListAPIView):
+class CarMediaViewSet(ListModelMixin, GenericViewSet):
     """
     List car medias
     """
@@ -43,7 +35,7 @@ class CarMediaList(ListAPIView):
         return queryset
 
 
-class CarFeatureList(ListAPIView):
+class CarFeatureViewSet(ListModelMixin, GenericViewSet):
     """
     List car features
     """

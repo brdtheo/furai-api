@@ -116,7 +116,7 @@ class CustomerAPITestCase(APITestCase):
         """Correctly retrieves the customer instance linked to the current user"""
 
         TestClientAuthenticator.authenticate(self.client, self.user)
-        url = reverse("customer-me")
+        url = reverse("customers-me")
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_200_OK
         assert response.data["user"] == self.user.id
@@ -136,7 +136,7 @@ class CustomerAPITestCase(APITestCase):
     def test_retrieve_current_customer_unauthenticated(self):
         """Prevent retrieving the current customer if not authenticated"""
 
-        url = reverse("customer-me")
+        url = reverse("customers-me")
         response = self.client.get(url, format="json")
         assert response.status_code == HTTP_401_UNAUTHORIZED
 
@@ -144,7 +144,7 @@ class CustomerAPITestCase(APITestCase):
         """Correctly update a customer instance"""
 
         TestClientAuthenticator.authenticate(self.client, self.user)
-        url = reverse("customer-detail", kwargs={"pk": self.customer.id})
+        url = reverse("customers-detail", kwargs={"pk": self.customer.id})
         first_name = fake.first_name()
         response = self.client.patch(
             url, data={"first_name": first_name}, format="json"
@@ -157,7 +157,7 @@ class CustomerAPITestCase(APITestCase):
     def test_update_customer_unauthenticated(self):
         """Prevent updating the current customer if not authenticated"""
 
-        url = reverse("customer-detail", kwargs={"pk": self.customer.id})
+        url = reverse("customers-detail", kwargs={"pk": self.customer.id})
         response = self.client.patch(
             url, data={"first_name": fake.first_name()}, format="json"
         )
@@ -168,7 +168,7 @@ class CustomerAPITestCase(APITestCase):
 
         random_customer = set_up_customer()
         TestClientAuthenticator.authenticate(self.client, random_customer.user)
-        url = reverse("customer-detail", kwargs={"pk": self.customer.id})
+        url = reverse("customers-detail", kwargs={"pk": self.customer.id})
         response = self.client.patch(
             url, data={"first_name": fake.first_name()}, format="json"
         )

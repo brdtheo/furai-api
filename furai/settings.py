@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "drfpasswordless",
     "drf_spectacular",
     "django_countries",
+    "django_extensions",
     "car",
     "user",
     "customer",

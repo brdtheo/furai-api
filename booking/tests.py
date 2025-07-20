@@ -168,9 +168,9 @@ class BookingAPITestCase(APITestCase):
             format="json",
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
-        assert re.match(
-            BOOKING_NEGATIVE_PRICE_ERROR.detail["price_cents"].title().lower(),
-            response.data["price_cents"][0].lower(),
+        assert (
+            response.data["price_cents"]
+            == BOOKING_NEGATIVE_PRICE_ERROR.detail["price_cents"]
         )
 
     def test_create_booking_start_date_same_day(self):
@@ -202,11 +202,8 @@ class BookingAPITestCase(APITestCase):
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert (
-            re.match(
-                BOOKING_SAME_DAY_BOOKING_ERROR.detail[0].title().lower(),
-                response.data["non_field_errors"][0].lower(),
-            )
-            is not None
+            response.data["start_date"]
+            == BOOKING_SAME_DAY_BOOKING_ERROR.detail["start_date"]
         )
 
     def test_create_booking_start_date_past(self):
@@ -236,11 +233,8 @@ class BookingAPITestCase(APITestCase):
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert (
-            re.match(
-                BOOKING_START_DATE_IN_THE_PAST_ERROR.detail[0].title().lower(),
-                response.data["non_field_errors"][0].lower(),
-            )
-            is not None
+            response.data["start_date"]
+            == BOOKING_START_DATE_IN_THE_PAST_ERROR.detail["start_date"]
         )
 
     def test_create_booking_end_date_past(self):
@@ -270,11 +264,8 @@ class BookingAPITestCase(APITestCase):
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert (
-            re.match(
-                BOOKING_END_DATE_IN_THE_PAST_ERROR.detail[0].title().lower(),
-                response.data["non_field_errors"][0].lower(),
-            )
-            is not None
+            response.data["end_date"]
+            == BOOKING_END_DATE_IN_THE_PAST_ERROR.detail["end_date"]
         )
 
     def test_create_booking_end_date_before_start_date(self):
@@ -304,11 +295,8 @@ class BookingAPITestCase(APITestCase):
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert (
-            re.match(
-                BOOKING_END_DATE_BEFORE_START_DATE_ERROR.detail[0].title().lower(),
-                response.data["non_field_errors"][0].lower(),
-            )
-            is not None
+            response.data["end_date"]
+            == BOOKING_END_DATE_BEFORE_START_DATE_ERROR.detail["end_date"]
         )
 
     def test_create_booking_required_passport(self):
@@ -338,11 +326,8 @@ class BookingAPITestCase(APITestCase):
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert (
-            re.match(
-                BOOKING_CUSTOMER_PASSPORT_REQUIRED_ERROR.detail[0].title().lower(),
-                response.data["non_field_errors"][0].lower(),
-            )
-            is not None
+            response.data["passport"]
+            == BOOKING_CUSTOMER_PASSPORT_REQUIRED_ERROR.detail["passport"]
         )
 
     def test_create_booking_invalid_country_code(self):
@@ -370,12 +355,9 @@ class BookingAPITestCase(APITestCase):
             format="json",
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
-        assert (
-            re.search(
-                "is not a valid choice",
-                response.data["address_country"][0].title().lower(),
-            )
-            is not None
+        assert re.search(
+            "is not a valid choice",
+            response.data["address_country"][0].title().lower(),
         )
 
     def test_create_booking_new_user(self):
@@ -549,11 +531,8 @@ class BookingAPITestCase(APITestCase):
         for response in response_list:
             assert response.status_code == HTTP_400_BAD_REQUEST
             assert (
-                re.match(
-                    BOOKING_CAR_UNAVAILABLE_TIME_PERIOD_ERROR.detail[0].title().lower(),
-                    response.data["non_field_errors"][0].title().lower(),
-                )
-                is not None
+                response.data["car"]
+                == BOOKING_CAR_UNAVAILABLE_TIME_PERIOD_ERROR.detail["car"]
             )
 
     def test_cancel_booking_unauthenticated(self):
@@ -581,9 +560,8 @@ class BookingAPITestCase(APITestCase):
         url = reverse("bookings-cancel", kwargs={"pk": self.booking.id})
         response = self.client.post(url, format="json")
         assert response.status_code == HTTP_400_BAD_REQUEST
-        assert re.match(
-            BOOKING_CANCEL_COMPLETED_ERROR.detail["status"].title().lower(),
-            response.data["status"].lower(),
+        assert (
+            response.data["status"] == BOOKING_CANCEL_COMPLETED_ERROR.detail["status"]
         )
         TestClientAuthenticator.authenticate_logout(self.client)
 
@@ -596,9 +574,8 @@ class BookingAPITestCase(APITestCase):
         url = reverse("bookings-cancel", kwargs={"pk": self.booking.id})
         response = self.client.post(url, format="json")
         assert response.status_code == HTTP_400_BAD_REQUEST
-        assert re.match(
-            BOOKING_ALREADY_CANCELED_ERROR.detail["status"].title().lower(),
-            response.data["status"].lower(),
+        assert (
+            response.data["status"] == BOOKING_ALREADY_CANCELED_ERROR.detail["status"]
         )
         TestClientAuthenticator.authenticate_logout(self.client)
 

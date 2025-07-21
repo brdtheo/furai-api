@@ -111,9 +111,7 @@ class Car(BaseModel):
         help_text="The price for a 24 hours rental, in cents",
         db_comment="The price for a 24 hours rental, in cents",
     )
-    features = models.ManyToManyField(
-        CarFeature,
-    )
+    features = models.ManyToManyField(CarFeature, blank=True)
 
     def __str__(self) -> str:
         return self.name
@@ -122,12 +120,10 @@ class Car(BaseModel):
     def name(self) -> str:
         return f"{self.make} {self.model}"
 
-    @override
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        # Set automatically slug
-        if not self.slug:
+    def clean(self) -> None:
+        # Automatically set slug
+        if (not self.slug) or (slugify(self.name) != self.slug):
             self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
 
     def get_absolute_url(self) -> str:
         return reverse("car-details", kwargs={"car_slug": self.slug})

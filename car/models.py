@@ -103,10 +103,6 @@ class Car(BaseModel):
         help_text="The price for a 9 hours rental, in cents",
         db_comment="The price for a 9 hours rental, in cents",
     )
-    price_twelve_hours_cents = models.IntegerField(
-        help_text="The price for a 12 hours rental, in cents",
-        db_comment="The price for a 12 hours rental, in cents",
-    )
     price_twenty_four_hours_cents = models.IntegerField(
         help_text="The price for a 24 hours rental, in cents",
         db_comment="The price for a 24 hours rental, in cents",

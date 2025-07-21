@@ -30,7 +30,7 @@ class BookingAdmin(admin.ModelAdmin):
     list_display = (
         "customer",
         "car",
-        "price_cents",
+        "price",
         "start_date",
         "end_date",
         "status",
@@ -52,5 +52,5 @@ class BookingAdmin(admin.ModelAdmin):
         return super().response_change(request, obj)
 
     @admin.display(description="Price", empty_value="Free")
-    def price_cents(self, obj: Booking) -> str:
-        return f"{obj.price_cents}THB"
+    def price(self, obj: Booking) -> str:
+        return f"{int(obj.price_cents / 100)} THB"

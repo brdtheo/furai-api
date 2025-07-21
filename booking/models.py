@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Any, Self
 
 import resend
 from django.db import models
@@ -10,6 +10,15 @@ from customer.models import Customer
 from furai.models import BaseModel
 
 from .enums import BookingStatus
+
+
+class BookingManager(models.Manager):
+    def create(self, **kwargs: Any) -> Any:
+        from .services import BookingService
+
+        service = BookingService(**kwargs)
+        customer = service.create()
+        return customer
 
 
 class Booking(BaseModel):

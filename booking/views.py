@@ -9,7 +9,7 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import GenericViewSet
 
 from customer.models import Customer
@@ -20,6 +20,7 @@ from .errors import BOOKING_ALREADY_CANCELED_ERROR, BOOKING_CANCEL_COMPLETED_ERR
 from .models import Booking
 from .permissions import IsBookingOwner
 from .serializers import BookingSerializer
+from .services import BookingService
 
 stripe.api_key = os.getenv("STRIPE_API_KEY")
 
@@ -52,6 +53,39 @@ class BookingViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """Create a booking. Automatically creates user and/or customer"""
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            service = BookingService(
+                address_city=serializer.validated_data.get("address_city"),
+                address_country=serializer.validated_data.get("address_country"),
+                address_line1=serializer.validated_data.get("address_line1"),
+                address_postal_code=serializer.validated_data.get(
+                    "address_postal_code"
+                ),
+                car=serializer.validated_data.get("car"),
+                email=serializer.validated_data.get("email"),
+                end_date=serializer.validated_data.get("end_date"),
+                first_name=serializer.validated_data.get("first_name"),
+                last_name=serializer.validated_data.get("last_name"),
+                phone=serializer.validated_data.get("phone"),
+                price_cents=serializer.validated_data.get("price_cents"),
+                start_date=serializer.validated_data.get("start_date"),
+                address_line2=serializer.validated_data.get("address_line2"),
+                address_state=serializer.validated_data.get("address_state"),
+                passport=serializer.validated_data.get("passport"),
+            )
+            booking = service.create()
+            headers = self.get_success_headers(serializer.data)
+            return Response(
+                self.get_serializer(booking).data,
+                status=HTTP_201_CREATED,
+                headers=headers,
+            )
+        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=["post"])
     def create_payment_intent(

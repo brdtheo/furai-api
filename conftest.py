@@ -31,7 +31,7 @@ def stripe_mocks():
 
     stripe_mock = StripeMock()
     with (
-        patch("customer.models.stripe.Customer.create", stripe_mock.customer_create),
-        patch("customer.models.stripe.Customer.modify", stripe_mock.customer_modify),
+        patch("customer.services.stripe.Customer.create", stripe_mock.customer_create),
+        patch("customer.services.stripe.Customer.modify", stripe_mock.customer_modify),
     ):
         yield stripe_mock

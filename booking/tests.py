@@ -16,6 +16,7 @@ from rest_framework.test import APITestCase
 
 from car.models import Car
 from car.tests import set_up_car
+from customer.errors import CUSTOMER_PASSPORT_NUMBER_REQUIRED_ERROR
 from customer.models import Customer
 from customer.tests import set_up_customer, set_up_customer_list
 from furai.tests.mocks import enable_stripe_mock
@@ -27,7 +28,6 @@ from .errors import (
     BOOKING_ALREADY_CANCELED_ERROR,
     BOOKING_CANCEL_COMPLETED_ERROR,
     BOOKING_CAR_UNAVAILABLE_TIME_PERIOD_ERROR,
-    BOOKING_CUSTOMER_PASSPORT_REQUIRED_ERROR,
     BOOKING_END_DATE_BEFORE_START_DATE_ERROR,
     BOOKING_END_DATE_IN_THE_PAST_ERROR,
     BOOKING_NEGATIVE_PRICE_ERROR,
@@ -339,7 +339,7 @@ class BookingAPITestCase(APITestCase):
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert (
             response.data["passport"]
-            == BOOKING_CUSTOMER_PASSPORT_REQUIRED_ERROR.detail["passport"]
+            == CUSTOMER_PASSPORT_NUMBER_REQUIRED_ERROR.detail["passport"]
         )
 
     def test_create_booking_invalid_country_code(self):

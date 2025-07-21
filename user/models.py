@@ -4,7 +4,8 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.forms import ValidationError
-from django.utils import timezone
+
+from furai.models import BaseModel
 
 
 class CustomUserManager(BaseUserManager):
@@ -45,7 +46,7 @@ class CustomUserManager(BaseUserManager):
         return user
 
 
-class CustomUser(AbstractUser):
+class CustomUser(AbstractUser, BaseModel):
     """Representation of a User - solely for auth purposes"""
 
     username = None
@@ -53,11 +54,6 @@ class CustomUser(AbstractUser):
     last_name = None
     email = models.EmailField(
         help_text="The user email", db_comment="The user email", unique=True
-    )
-    created_at = models.DateTimeField(
-        help_text="The creation date of the user object",
-        db_comment="The creation date of the user object",
-        default=timezone.now,
     )
 
     USERNAME_FIELD = "email"

@@ -4,9 +4,9 @@ from typing import Any, cast, override
 import stripe
 from django.db import IntegrityError, models
 from django.forms import ValidationError
-from django.utils import timezone
 from django_countries.fields import CountryField
 
+from furai.models import BaseModel
 from user.models import CustomUser
 
 stripe.api_key = os.getenv("STRIPE_API_KEY")
@@ -36,7 +36,7 @@ class CustomerManager(models.Manager):
         )
 
 
-class Customer(models.Model):
+class Customer(BaseModel):
     """Representation of a Customer"""
 
     objects = CustomerManager()
@@ -106,11 +106,6 @@ class Customer(models.Model):
         blank=True,
         help_text="Customer's passport number if not Thai citizen",
         db_comment="Customer's passport number if not Thai citizen",
-    )
-    created_at = models.DateTimeField(
-        help_text="The creation date of the customer",
-        db_comment="The creation date of the customer",
-        default=timezone.now,
     )
 
     @property

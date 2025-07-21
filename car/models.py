@@ -3,13 +3,14 @@ from typing import Any, override
 from django.db import models
 from django.forms import ValidationError
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.text import slugify
+
+from furai.models import BaseModel
 
 from .enums import CarDrivetrain, CarFeatures, CarFuelType, CarMake, CarTransmission
 
 
-class CarFeature(models.Model):
+class CarFeature(BaseModel):
     """Representation of a car feature"""
 
     name = models.CharField(
@@ -18,11 +19,6 @@ class CarFeature(models.Model):
         max_length=25,
         unique=True,
         choices=CarFeatures,
-    )
-    created_at = models.DateTimeField(
-        help_text="The creation date of the feature object",
-        db_comment="The creation date of the feature object",
-        default=timezone.now,
     )
 
     def __str__(self) -> str:
@@ -38,7 +34,7 @@ class CarFeature(models.Model):
         super().save(*args, **kwargs)
 
 
-class Car(models.Model):
+class Car(BaseModel):
     """Representation of a car available for rent"""
 
     make = models.CharField(
@@ -118,17 +114,6 @@ class Car(models.Model):
     features = models.ManyToManyField(
         CarFeature,
     )
-    created_at = models.DateTimeField(
-        help_text="The creation date of the car object",
-        db_comment="The creation date of the car object",
-        default=timezone.now,
-    )
-    updated_at = models.DateTimeField(
-        help_text="The last updated date of the car object",
-        db_comment="The last updated date of the car object",
-        blank=True,
-        null=True,
-    )
 
     def __str__(self) -> str:
         return self.name
@@ -142,17 +127,13 @@ class Car(models.Model):
         # Set automatically slug
         if not self.slug:
             self.slug = slugify(self.name)
-
-        # Use None for initial updated_at value
-        if self.pk:
-            self.updated_at = timezone.now()
         super().save(*args, **kwargs)
 
     def get_absolute_url(self) -> str:
         return reverse("car-details", kwargs={"car_slug": self.slug})
 
 
-class CarMedia(models.Model):
+class CarMedia(BaseModel):
     """Representation of a media (picture, video..) linked to a car"""
 
     car = models.ForeignKey(
@@ -169,11 +150,6 @@ class CarMedia(models.Model):
     is_thumbnail = models.BooleanField(
         help_text="When set to True, the media is used as the car thumbnail",
         db_comment="When set to True, the media is used as the car thumbnail",
-    )
-    created_at = models.DateTimeField(
-        help_text="The creation date of the media object",
-        db_comment="The creation date of the media object",
-        default=timezone.now,
     )
 
     def __str__(self) -> str:

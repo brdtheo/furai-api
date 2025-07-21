@@ -3,16 +3,16 @@ from typing import Self
 import resend
 from django.db import models
 from django.template.loader import render_to_string
-from django.utils import timezone
 from resend.emails._email import Email
 
 from car.models import Car, CarMedia
 from customer.models import Customer
+from furai.models import BaseModel
 
 from .enums import BookingStatus
 
 
-class Booking(models.Model):
+class Booking(BaseModel):
     """Representation of a Booking"""
 
     car = models.ForeignKey(
@@ -44,11 +44,6 @@ class Booking(models.Model):
         help_text="The current booking status",
         db_comment="The current booking status",
         default=BookingStatus.UNPAID,
-    )
-    created_at = models.DateTimeField(
-        help_text="The creation date of the booking",
-        db_comment="The creation date of the booking",
-        default=timezone.now,
     )
 
     def __str__(self) -> str:

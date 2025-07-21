@@ -23,6 +23,7 @@ class CustomerViewSet(RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
     @action(detail=False)
     def me(self, request: Request, *args: str, **kwargs: str) -> Response:
         """Retrieve the customer instance from current authenticated user"""
+
         customer = get_object_or_404(Customer, user=self.request.user)
         serializer = CustomerSerializer(customer)
         return Response(serializer.data, status=HTTP_200_OK)

@@ -24,10 +24,10 @@ class StripeMock:
 def enable_stripe_mock(self: Any) -> None:
     self.stripe_mock = StripeMock()
     patcher_create = patch(
-        "customer.models.stripe.Customer.create", self.stripe_mock.customer_create
+        "customer.services.stripe.Customer.create", self.stripe_mock.customer_create
     )
     patcher_modify = patch(
-        "customer.models.stripe.Customer.modify", self.stripe_mock.customer_modify
+        "customer.services.stripe.Customer.modify", self.stripe_mock.customer_modify
     )
     self.addCleanup(patcher_create.stop)
     self.addCleanup(patcher_modify.stop)

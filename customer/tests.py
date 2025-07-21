@@ -1,8 +1,7 @@
-from django.db import IntegrityError
-from django.forms import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from faker import Faker
+from rest_framework.exceptions import ValidationError
 from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 from rest_framework.test import APITestCase
 
@@ -74,7 +73,7 @@ class CustomerTestCase(TestCase):
     def test_create_customer_no_user(self):
         """Ensures a customer cannot be created without a linked user"""
 
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(TypeError):
             Customer.objects.create(
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),

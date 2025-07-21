@@ -32,7 +32,6 @@ def set_up_car() -> Car:
         price_three_hours_cents=fake.pyint(2000, 2500, 500),
         price_six_hours_cents=fake.pyint(3800, 4200, 500),
         price_nine_hours_cents=fake.pyint(4800, 5500, 500),
-        price_twelve_hours_cents=fake.pyint(6000, 7000, 5000),
         price_twenty_four_hours_cents=fake.pyint(7200, 8500, 5000),
     )
     return car

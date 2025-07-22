@@ -1,12 +1,26 @@
 from typing import Any
 
 from django.db import models
-from django.urls import reverse
-from django.utils.text import slugify
 
 from furai.models import BaseModel
 
 from .enums import CarDrivetrain, CarFeatures, CarFuelType, CarMake, CarTransmission
+
+
+class CarManager(models.Manager):
+    def create(self, **kwargs: Any) -> Any:
+        from .services import CarService
+
+        service = CarService(**kwargs)
+        car = service.create()
+        return car
+
+    def update(self, **kwargs: Any) -> Any:
+        from .services import CarService
+
+        service = CarService(**kwargs)
+        car = service.update()
+        return car
 
 
 class CarFeatureManager(models.Manager):
@@ -46,6 +60,8 @@ class CarFeature(BaseModel):
 
 class Car(BaseModel):
     """Representation of a car available for rent"""
+
+    objects = CarManager()
 
     make = models.CharField(
         help_text="The car brand",
@@ -125,14 +141,6 @@ class Car(BaseModel):
     @property
     def name(self) -> str:
         return f"{self.make} {self.model}"
-
-    def clean(self) -> None:
-        # Automatically set slug
-        if (not self.slug) or (slugify(self.name) != self.slug):
-            self.slug = slugify(self.name)
-
-    def get_absolute_url(self) -> str:
-        return reverse("car-details", kwargs={"car_slug": self.slug})
 
 
 class CarMedia(BaseModel):

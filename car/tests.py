@@ -1,6 +1,7 @@
 from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.text import slugify
 from faker import Faker
 from rest_framework.exceptions import ValidationError
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
@@ -106,6 +107,19 @@ class CarTestCase(TestCase):
         """Returns the instance representation correctly"""
 
         assert self.car.__str__() == self.car.name
+
+    def test_slug_field(self):
+        """Ensures the slug is valid"""
+
+        assert self.car.slug == slugify(self.car.name)
+
+    def test_updated_slug(self):
+        """Ensures the slug is updated when the make or model changes"""
+
+        Car.objects.filter(pk=self.car.pk).update(
+            make=fake.enum(CarMake), model=" ".join(fake.words(2))
+        )
+        assert self.car.slug == slugify(self.car.name)
 
 
 class CarAPITestCase(APITestCase):

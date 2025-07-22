@@ -14,6 +14,7 @@ from booking.enums import BookingStatus
 from car.models import CarMedia
 from customer.models import Customer
 from customer.services import CustomerService
+from furai.settings import CURRENCY
 from user.models import CustomUser
 
 from .errors import (
@@ -124,7 +125,7 @@ class BookingService:
         booking = get_object_or_404(Booking, pk=self.id)
         payment_intent = stripe.PaymentIntent.create(
             amount=booking.price_cents,
-            currency="thb",
+            currency=CURRENCY.lower(),
             customer=booking.customer.stripe_id,
             metadata={"booking_id": str(booking.pk)},
         )

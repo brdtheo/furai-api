@@ -1,7 +1,6 @@
-from typing import Any, override
+from typing import Any
 
 from django.db import models
-from django.forms import ValidationError
 from django.urls import reverse
 from django.utils.text import slugify
 
@@ -17,6 +16,15 @@ class CarFeatureManager(models.Manager):
         service = CarFeatureService(**kwargs)
         car_feature = service.create()
         return car_feature
+
+
+class CarMediaManager(models.Manager):
+    def create(self, **kwargs: Any) -> Any:
+        from .services import CarMediaService
+
+        service = CarMediaService(**kwargs)
+        car_media = service.create()
+        return car_media
 
 
 class CarFeature(BaseModel):
@@ -130,6 +138,8 @@ class Car(BaseModel):
 class CarMedia(BaseModel):
     """Representation of a media (picture, video..) linked to a car"""
 
+    objects = CarMediaManager()
+
     car = models.ForeignKey(
         Car,
         on_delete=models.CASCADE,
@@ -148,14 +158,3 @@ class CarMedia(BaseModel):
 
     def __str__(self) -> str:
         return self.url
-
-    @override
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        # Ensure only one thumbnail is linked to a car
-        thumbnail_count = CarMedia.objects.filter(
-            car=self.car, is_thumbnail=True
-        ).count()
-        if self.is_thumbnail and thumbnail_count > 0:
-            raise ValidationError("Cannot assign multiple thumbnails for one car")
-
-        super().save(*args, **kwargs)

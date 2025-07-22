@@ -1,14 +1,22 @@
 from datetime import datetime
 from typing import Any, cast
 
+import resend
 from django.db import transaction
+from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.utils import timezone
+from resend.emails._email import Email
 
+from booking.enums import BookingStatus
+from car.models import CarMedia
 from customer.models import Customer
 from customer.services import CustomerService
 from user.models import CustomUser
 
 from .errors import (
+    BOOKING_ALREADY_CANCELED_ERROR,
+    BOOKING_CANCEL_COMPLETED_ERROR,
     BOOKING_CAR_UNAVAILABLE_TIME_PERIOD_ERROR,
     BOOKING_END_DATE_BEFORE_START_DATE_ERROR,
     BOOKING_END_DATE_IN_THE_PAST_ERROR,
@@ -26,21 +34,22 @@ class BookingService:
 
     def __init__(
         self,
-        address_city: str,
-        address_country: str,
-        address_line1: str,
-        address_postal_code: str,
-        car: int,
-        email: str,
-        end_date: datetime,
-        first_name: str,
-        last_name: str,
-        phone: str,
-        price_cents: int,
-        start_date: datetime,
-        address_line2: str = "",
-        address_state: str = "",
-        passport: str = "",
+        address_city: str | None = None,
+        address_country: str | None = None,
+        address_line1: str | None = None,
+        address_postal_code: str | None = None,
+        car: int | None = None,
+        email: str | None = None,
+        end_date: datetime | None = None,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        phone: str | None = None,
+        price_cents: int | None = None,
+        start_date: datetime | None = None,
+        address_line2: str | None = None,
+        address_state: str | None = None,
+        passport: str | None = None,
+        id: int | None = None,
     ) -> None:
         self.address_city = address_city
         self.address_country = address_country
@@ -57,6 +66,53 @@ class BookingService:
         self.address_line2 = address_line2
         self.address_state = address_state
         self.passport = passport
+        self.id = id
+
+    def send_confirmation_email(self, booking: Booking) -> Email:
+        """Send an email to the user when a new Booking is created"""
+
+        queryset = CarMedia.objects.filter(car=booking.car, is_thumbnail=True)
+        car_thumbnail = queryset[0].url if queryset.exists() else None
+        html_body = render_to_string(
+            "booking-confirmation.html",
+            {
+                "start_date": booking.start_date,
+                "end_date": booking.end_date,
+                "car_thumbnail": car_thumbnail,
+                "car_name": booking.car.name,
+                "status": booking.status,
+            },
+        )
+        params: resend.Emails.SendParams = {
+            "from": "Furai car rental <noreply@furai-jdm.com>",
+            "to": [booking.customer.user.email],
+            "subject": "Your booking confirmation",
+            "html": html_body,
+        }
+        return resend.Emails.send(params)
+
+    def send_cancellation_email(self, booking: Booking) -> Email:
+        """Send an email to the user when a Booking is cancelled"""
+
+        queryset = CarMedia.objects.filter(car=booking.car, is_thumbnail=True)
+        car_thumbnail = queryset[0].url if queryset.exists() else None
+        html_body = render_to_string(
+            "booking-cancellation.html",
+            {
+                "start_date": booking.start_date,
+                "end_date": booking.end_date,
+                "car_thumbnail": car_thumbnail,
+                "car_name": booking.car.name,
+                "status": booking.status,
+            },
+        )
+        params: resend.Emails.SendParams = {
+            "from": "Furai car rental <noreply@furai-jdm.com>",
+            "to": [booking.customer.user.email],
+            "subject": "Your booking has been cancelled",
+            "html": html_body,
+        }
+        return resend.Emails.send(params)
 
     @transaction.atomic
     def create(self) -> Booking:
@@ -72,7 +128,11 @@ class BookingService:
                 raise BOOKING_END_DATE_IN_THE_PAST_ERROR
 
         # Raise an error if the end date is before the start date
-        if self.end_date is not None and self.end_date < self.start_date:
+        if (
+            self.end_date is not None
+            and self.start_date is not None
+            and self.end_date < self.start_date
+        ):
             raise BOOKING_END_DATE_BEFORE_START_DATE_ERROR
 
         # Raise an error if start date is on the same day
@@ -128,5 +188,25 @@ class BookingService:
             price_cents=self.price_cents,
         )
         booking.save()
+
+        self.send_confirmation_email(booking)
+
+        return booking
+
+    @transaction.atomic
+    def cancel(self, is_staff_origin: bool = False) -> Booking:
+        """Cancel a booking"""
+
+        booking = get_object_or_404(Booking, pk=self.id)
+
+        if booking.status == BookingStatus.COMPLETED:
+            raise BOOKING_CANCEL_COMPLETED_ERROR
+        if booking.status == (
+            BookingStatus.CANCELED_BY_CUSTOMER or BookingStatus.CANCELED_BY_STAFF
+        ):
+            raise BOOKING_ALREADY_CANCELED_ERROR
+
+        booking.mark_as_cancelled(is_staff_origin)
+        self.send_cancellation_email(booking)
 
         return booking

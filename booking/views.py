@@ -15,8 +15,6 @@ from rest_framework.viewsets import GenericViewSet
 from customer.models import Customer
 from user.models import CustomUser
 
-from .enums import BookingStatus
-from .errors import BOOKING_ALREADY_CANCELED_ERROR, BOOKING_CANCEL_COMPLETED_ERROR
 from .models import Booking
 from .permissions import IsBookingOwner
 from .serializers import BookingSerializer
@@ -117,20 +115,8 @@ class BookingViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
         booking = get_object_or_404(Booking, pk=kwargs["pk"])
         self.check_object_permissions(request, booking)
 
-        # Validation
-        if booking.status == BookingStatus.COMPLETED:
-            raise BOOKING_CANCEL_COMPLETED_ERROR
-        if booking.status == (
-            BookingStatus.CANCELED_BY_CUSTOMER or BookingStatus.CANCELED_BY_STAFF
-        ):
-            raise BOOKING_ALREADY_CANCELED_ERROR
-        booking.cancel()
+        service = BookingService(id=kwargs["pk"])
+        cancelled_booking = service.cancel()
 
-        # Send cancellation email
-        if (
-            booking.status is BookingStatus.CANCELED_BY_CUSTOMER
-            or booking.status is BookingStatus.CANCELED_BY_STAFF
-        ):
-            booking.send_cancellation_email()
-        booking_serializer = BookingSerializer(booking)
-        return Response(booking_serializer.data, status=HTTP_200_OK)
+        serializer = self.get_serializer(cancelled_booking)
+        return Response(serializer.data, status=HTTP_200_OK)

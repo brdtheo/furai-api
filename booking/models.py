@@ -1,11 +1,8 @@
 from typing import Any, Self
 
-import resend
 from django.db import models
-from django.template.loader import render_to_string
-from resend.emails._email import Email
 
-from car.models import Car, CarMedia
+from car.models import Car
 from customer.models import Customer
 from furai.models import BaseModel
 
@@ -58,53 +55,7 @@ class Booking(BaseModel):
     def __str__(self) -> str:
         return f"{self.customer.name} - {self.car.name}"
 
-    def send_confirmation_email(self) -> Email:
-        """Send an email to the user when a new Booking is created"""
-
-        queryset = CarMedia.objects.filter(car=self.car, is_thumbnail=True)
-        car_thumbnail = queryset[0].url if queryset.exists() else None
-        html_body = render_to_string(
-            "booking-confirmation.html",
-            {
-                "start_date": self.start_date,
-                "end_date": self.end_date,
-                "car_thumbnail": car_thumbnail,
-                "car_name": self.car.name,
-                "status": self.status,
-            },
-        )
-        params: resend.Emails.SendParams = {
-            "from": "Furai car rental <noreply@furai-jdm.com>",
-            "to": [self.customer.user.email],
-            "subject": "Your booking confirmation",
-            "html": html_body,
-        }
-        return resend.Emails.send(params)
-
-    def send_cancellation_email(self) -> Email:
-        """Send an email to the user when a Booking is cancelled"""
-
-        queryset = CarMedia.objects.filter(car=self.car, is_thumbnail=True)
-        car_thumbnail = queryset[0].url if queryset.exists() else None
-        html_body = render_to_string(
-            "booking-cancellation.html",
-            {
-                "start_date": self.start_date,
-                "end_date": self.end_date,
-                "car_thumbnail": car_thumbnail,
-                "car_name": self.car.name,
-                "status": self.status,
-            },
-        )
-        params: resend.Emails.SendParams = {
-            "from": "Furai car rental <noreply@furai-jdm.com>",
-            "to": [self.customer.user.email],
-            "subject": "Your booking has been cancelled",
-            "html": html_body,
-        }
-        return resend.Emails.send(params)
-
-    def cancel(
+    def mark_as_cancelled(
         self,
         is_staff_origin: bool = False,
     ) -> Self:

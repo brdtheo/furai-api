@@ -10,6 +10,7 @@ from stripe import PaymentIntent
 
 from booking.enums import BookingStatus
 from booking.models import Booking
+from booking.services import BookingService
 
 stripe.api_key = os.getenv("STRIPE_API_KEY")
 
@@ -43,7 +44,7 @@ class WebhookView(APIView):
                 )
                 booking.status = BookingStatus.ACTIVE
                 booking.save()
-                booking.send_confirmation_email()
+                BookingService().send_confirmation_email(booking)
         if event["type"] == "payment_intent.canceled":
             booking_id: str = event["data"]["object"].metadata["booking_id"]
             booking = get_object_or_404(Booking, pk=booking_id)

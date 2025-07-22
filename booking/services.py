@@ -1,7 +1,9 @@
+import os
 from datetime import datetime
 from typing import Any, cast
 
 import resend
+import stripe
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -25,6 +27,8 @@ from .errors import (
     BOOKING_START_DATE_IN_THE_PAST_ERROR,
 )
 from .models import Booking
+
+stripe.api_key = os.getenv("STRIPE_API_KEY")
 
 
 class BookingService:
@@ -113,6 +117,18 @@ class BookingService:
             "html": html_body,
         }
         return resend.Emails.send(params)
+
+    def create_payment_intent(self) -> stripe.PaymentIntent:
+        """Create a Stripe payment intent from a booking"""
+
+        booking = get_object_or_404(Booking, pk=self.id)
+        payment_intent = stripe.PaymentIntent.create(
+            amount=booking.price_cents,
+            currency="thb",
+            customer=booking.customer.stripe_id,
+            metadata={"booking_id": str(booking.pk)},
+        )
+        return payment_intent
 
     @transaction.atomic
     def create(self) -> Booking:

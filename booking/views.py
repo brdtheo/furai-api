@@ -1,7 +1,5 @@
-import os
 from typing import Any, cast
 
-import stripe
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
@@ -19,8 +17,6 @@ from .models import Booking
 from .permissions import IsBookingOwner
 from .serializers import BookingSerializer
 from .services import BookingService
-
-stripe.api_key = os.getenv("STRIPE_API_KEY")
 
 
 class BookingViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
@@ -87,7 +83,7 @@ class BookingViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
 
     @action(detail=True, methods=["post"])
     def create_payment_intent(
-        self, request: Request, *args: Any, **kwargs: str
+        self, request: Request, *args: Any, **kwargs: Any
     ) -> Response:
         """Create a Stripe payment intent to pay a booking"""
 
@@ -96,13 +92,8 @@ class BookingViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
         booking = get_object_or_404(Booking, pk=kwargs["pk"])
         self.check_object_permissions(request, booking)
 
-        # Create Stripe payment intent
-        payment_intent = stripe.PaymentIntent.create(
-            amount=booking.price_cents,
-            currency="thb",
-            customer=booking.customer.stripe_id,
-            metadata={"booking_id": str(booking.pk)},
-        )
+        service = BookingService(id=kwargs["pk"])
+        payment_intent = service.create_payment_intent()
 
         return Response(payment_intent, status=HTTP_200_OK)
 

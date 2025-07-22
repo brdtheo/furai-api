@@ -8,3 +8,8 @@ CAR_FEATURE_INVALID_NAME_ERROR = exceptions.ValidationError(
     },
     code=str(status.HTTP_400_BAD_REQUEST),
 )
+
+CAR_MEDIA_MULTIPLE_THUMBNAIL_ERROR = exceptions.ValidationError(
+    detail={"is_thumbnail": "Cannot assign multiple thumbnails for one car"},
+    code=str(status.HTTP_400_BAD_REQUEST),
+)

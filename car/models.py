@@ -10,8 +10,19 @@ from furai.models import BaseModel
 from .enums import CarDrivetrain, CarFeatures, CarFuelType, CarMake, CarTransmission
 
 
+class CarFeatureManager(models.Manager):
+    def create(self, **kwargs: Any) -> Any:
+        from .services import CarFeatureService
+
+        service = CarFeatureService(**kwargs)
+        car_feature = service.create()
+        return car_feature
+
+
 class CarFeature(BaseModel):
     """Representation of a car feature"""
+
+    objects = CarFeatureManager()
 
     name = models.CharField(
         help_text="The name of the car feature",
@@ -23,15 +34,6 @@ class CarFeature(BaseModel):
 
     def __str__(self) -> str:
         return self.name
-
-    @override
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        # Raise an error if the name is not from the CarFeatures enum
-        if self.name not in CarFeatures:
-            raise ValidationError(
-                "A car feature name can only be taken from the available choices"
-            )
-        super().save(*args, **kwargs)
 
 
 class Car(BaseModel):

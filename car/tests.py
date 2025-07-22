@@ -1,8 +1,8 @@
 from django.db import IntegrityError
-from django.forms import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from faker import Faker
+from rest_framework.exceptions import ValidationError
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 from rest_framework.test import APITestCase
 

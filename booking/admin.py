@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 
+from furai.settings import CURRENCY
+
 from .models import Booking
 
 
@@ -53,4 +55,4 @@ class BookingAdmin(admin.ModelAdmin):
 
     @admin.display(description="Price", empty_value="Free")
     def price(self, obj: Booking) -> str:
-        return f"{int(obj.price_cents / 100)} THB"
+        return f"{int(obj.price_cents / 100)} {CURRENCY}"

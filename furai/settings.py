@@ -217,3 +217,8 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+# Currency code
+# https://www.iso.org/iso-4217-currency-codes.html
+
+CURRENCY = "THB"

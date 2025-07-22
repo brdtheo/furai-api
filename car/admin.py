@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from furai.settings import CURRENCY
+
 from .models import Car, CarFeature, CarMedia
 
 
@@ -24,23 +26,23 @@ class CarAdmin(admin.ModelAdmin):
 
     @admin.display(description="Price - 1 hour")
     def price_one_hour(self, obj: Car) -> str:
-        return f"{int(obj.price_hourly_cents / 100)} THB"
+        return f"{int(obj.price_hourly_cents / 100)} {CURRENCY}"
 
     @admin.display(description="Price - 3 hour")
     def price_three_hours(self, obj: Car) -> str:
-        return f"{int(obj.price_three_hours_cents / 100)} THB"
+        return f"{int(obj.price_three_hours_cents / 100)} {CURRENCY}"
 
     @admin.display(description="Price - 6 hour")
     def price_six_hours(self, obj: Car) -> str:
-        return f"{int(obj.price_six_hours_cents / 100)} THB"
+        return f"{int(obj.price_six_hours_cents / 100)} {CURRENCY}"
 
     @admin.display(description="Price - 9 hour")
     def price_nine_hours(self, obj: Car) -> str:
-        return f"{int(obj.price_nine_hours_cents / 100)} THB"
+        return f"{int(obj.price_nine_hours_cents / 100)} {CURRENCY}"
 
     @admin.display(description="Price - 24 hour")
     def price_twenty_four_hours(self, obj: Car) -> str:
-        return f"{int(obj.price_twenty_four_hours_cents / 100)} THB"
+        return f"{int(obj.price_twenty_four_hours_cents / 100)} {CURRENCY}"
 
 
 @admin.register(CarFeature)

@@ -102,13 +102,13 @@ class BookingTestCase(TestCase):
     def test_cancel_booking_by_customer(self):
         """Ensures a booking is cancelled correctly by a customer"""
 
-        self.booking.cancel()
+        self.booking.mark_as_cancelled()
         assert self.booking.status == BookingStatus.CANCELED_BY_CUSTOMER
 
     def test_cancel_booking_by_staff(self):
         """Ensures a booking is cancelled correctly by a staff member"""
 
-        self.booking.cancel(True)
+        self.booking.mark_as_cancelled(True)
         assert self.booking.status == BookingStatus.CANCELED_BY_STAFF
 
     def test_mark_as_complete(self):

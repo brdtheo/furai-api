@@ -12,7 +12,7 @@ def cancel(
     queryset: QuerySet[Booking],
 ) -> None:
     for booking in queryset.all():
-        booking.cancel(True)
+        booking.mark_as_cancelled(True)
 
 
 @admin.action(description="Mark selected bookings as complete")
@@ -46,7 +46,7 @@ class BookingAdmin(admin.ModelAdmin):
 
     def response_change(self, request: HttpRequest, obj: Booking) -> HttpResponse:
         if "_cancel" in request.POST:
-            obj.cancel(True)
+            obj.mark_as_cancelled(True)
             self.message_user(request, "This booking has been cancelled")
             return HttpResponseRedirect(".")
         return super().response_change(request, obj)

@@ -108,13 +108,15 @@ REST_FRAMEWORK = {
 # drfpasswordless settings
 # https://github.com/aaronn/django-rest-framework-passwordless
 
+NOREPLY_EMAIL_ADDRESS = "Furai car rental <noreply@dystanc3.xyz>"
+
 PASSWORDLESS_AUTH = {
     # Allowed auth types, can be EMAIL, MOBILE, or both.
     "PASSWORDLESS_AUTH_TYPES": [
         "EMAIL",
     ],
     # The email the callback token is sent from
-    "PASSWORDLESS_EMAIL_NOREPLY_ADDRESS": "Furai car rental <noreply@furai-jdm.com>",
+    "PASSWORDLESS_EMAIL_NOREPLY_ADDRESS": NOREPLY_EMAIL_ADDRESS,
     # Amount of time that tokens last, in seconds
     "PASSWORDLESS_TOKEN_EXPIRE_TIME": 5 * 60,
     # The email subject

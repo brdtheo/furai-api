@@ -14,7 +14,7 @@ from booking.enums import BookingStatus
 from car.models import CarMedia
 from customer.models import Customer
 from customer.services import CustomerService
-from furai.settings import CURRENCY
+from furai.settings import CURRENCY, NOREPLY_EMAIL_ADDRESS
 from user.models import CustomUser
 
 from .errors import (
@@ -89,7 +89,7 @@ class BookingService:
             },
         )
         params: resend.Emails.SendParams = {
-            "from": "Furai car rental <noreply@furai-jdm.com>",
+            "from": NOREPLY_EMAIL_ADDRESS,
             "to": [booking.customer.user.email],
             "subject": "Your booking confirmation",
             "html": html_body,
@@ -112,7 +112,7 @@ class BookingService:
             },
         )
         params: resend.Emails.SendParams = {
-            "from": "Furai car rental <noreply@furai-jdm.com>",
+            "from": NOREPLY_EMAIL_ADDRESS,
             "to": [booking.customer.user.email],
             "subject": "Your booking has been cancelled",
             "html": html_body,
